@@ -33,20 +33,20 @@ export function ParticleField() {
       velocities[i3 + 1] = Math.sin(phi) * Math.sin(theta) * speed
       velocities[i3 + 2] = Math.cos(phi) * speed
 
-      // Distribution: mostly fine dim dust, a few anchor stars
+      // Distribution: fine dim dust only — subtle background texture
       const r = Math.random()
-      if (r < 0.72) {
+      if (r < 0.82) {
         // Fine cosmic dust — barely perceptible
-        alphas[i] = 0.04 + Math.random() * 0.10
-        sizes[i]  = 0.5  + Math.random() * 1.0
-      } else if (r < 0.92) {
+        alphas[i] = 0.02 + Math.random() * 0.05
+        sizes[i]  = 0.2  + Math.random() * 0.4
+      } else if (r < 0.97) {
         // Mid-range specks
-        alphas[i] = 0.15 + Math.random() * 0.22
-        sizes[i]  = 1.2  + Math.random() * 2.8
+        alphas[i] = 0.06 + Math.random() * 0.08
+        sizes[i]  = 0.4  + Math.random() * 0.6
       } else {
-        // Brighter anchor particles (~8%)
-        alphas[i] = 0.45 + Math.random() * 0.40
-        sizes[i]  = 3.0  + Math.random() * 9.0
+        // Occasional slightly brighter dot (~3%) — still very small
+        alphas[i] = 0.12 + Math.random() * 0.10
+        sizes[i]  = 0.6  + Math.random() * 0.6
       }
     }
 
@@ -67,7 +67,7 @@ export function ParticleField() {
         void main() {
           v_alpha = a_alpha;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = a_size * (280.0 / -mv.z);
+          gl_PointSize = a_size * (120.0 / -mv.z);
           gl_Position  = projectionMatrix * mv;
         }
       `,

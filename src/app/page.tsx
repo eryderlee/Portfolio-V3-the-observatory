@@ -29,6 +29,7 @@ export default function Home() {
               label={dim.label}
               heading={dim.thresholdText}
               description={dim.description}
+              dimensionId={dim.id}
             />
           </section>
         ))}
