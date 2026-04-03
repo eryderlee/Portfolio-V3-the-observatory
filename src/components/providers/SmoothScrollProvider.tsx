@@ -1,8 +1,20 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import Lenis from 'lenis'
 import { gsap, ScrollTrigger } from '@/lib/gsap'
+
+interface LenisContextValue {
+  stop: () => void
+  start: () => void
+  scrollTo: (target: number | string | HTMLElement, options?: Record<string, unknown>) => void
+}
+
+const LenisContext = createContext<LenisContextValue | null>(null)
+
+export function useLenis() {
+  return useContext(LenisContext)
+}
 
 interface SmoothScrollProviderProps {
   children: React.ReactNode
@@ -15,14 +27,12 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
     const lenis = new Lenis({ autoRaf: false })
     lenisRef.current = lenis
 
-    // Drive Lenis from GSAP ticker for synchronized animations
     const update = (time: number) => {
       lenis.raf(time * 1000)
     }
 
     gsap.ticker.add(update)
     lenis.on('scroll', () => ScrollTrigger.update())
-    // Prevent GSAP from compensating for lag (causes jitter with Lenis)
     gsap.ticker.lagSmoothing(0)
 
     return () => {
@@ -31,5 +41,15 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
     }
   }, [])
 
-  return <>{children}</>
+  const ctx = useMemo<LenisContextValue>(
+    () => ({
+      stop: () => lenisRef.current?.stop(),
+      start: () => lenisRef.current?.start(),
+      scrollTo: (target, options) =>
+        lenisRef.current?.scrollTo(target as number, options as Parameters<Lenis['scrollTo']>[1]),
+    }),
+    []
+  )
+
+  return <LenisContext.Provider value={ctx}>{children}</LenisContext.Provider>
 }
