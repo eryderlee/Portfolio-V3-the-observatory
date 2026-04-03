@@ -1,0 +1,107 @@
+/* src/styles/themes.css */
+
+/* ─── Base dimension variables (defaults = Observatory) ─── */
+:root,
+[data-theme="observatory"] {
+  --dim-bg: #0a0e1a;
+  --dim-bg-secondary: #111520;
+  --dim-text: #e8eaf2;
+  --dim-text-muted: #8890a8;
+  --dim-accent: #a0a8c0;
+  --dim-accent-2: #6070a0;
+  --dim-border: rgba(160, 168, 192, 0.15);
+  --dim-glow: rgba(160, 168, 192, 0.08);
+  --dim-font-primary: var(--font-space-grotesk);
+  --dim-font-secondary: var(--font-space-grotesk);
+}
+
+[data-theme="core"] {
+  --dim-bg: #0d0d14;
+  --dim-bg-secondary: #141420;
+  --dim-text: #f0ead6;
+  --dim-text-muted: #a09070;
+  --dim-accent: #daa520;
+  --dim-accent-2: #00c8b4;
+  --dim-border: rgba(218, 165, 32, 0.2);
+  --dim-glow: rgba(218, 165, 32, 0.08);
+  --dim-font-primary: var(--font-playfair);
+  --dim-font-secondary: var(--font-space-grotesk);
+}
+
+[data-theme="celestial"] {
+  --dim-bg: #1a1208;
+  --dim-bg-secondary: #221808;
+  --dim-text: #f5f0e0;
+  --dim-text-muted: #c0a860;
+  --dim-accent: #daa520;
+  --dim-accent-2: #f5e080;
+  --dim-border: rgba(218, 165, 32, 0.25);
+  --dim-glow: rgba(218, 165, 32, 0.12);
+  --dim-font-primary: var(--font-playfair);
+  --dim-font-secondary: var(--font-playfair);
+}
+
+[data-theme="abyss"] {
+  --dim-bg: #0a1628;
+  --dim-bg-secondary: #0c1e38;
+  --dim-text: #c8f0ee;
+  --dim-text-muted: #4090a0;
+  --dim-accent: #00c8b4;
+  --dim-accent-2: #00a0d8;
+  --dim-border: rgba(0, 200, 180, 0.2);
+  --dim-glow: rgba(0, 200, 180, 0.08);
+  --dim-font-primary: var(--font-sofia-condensed);
+  --dim-font-secondary: var(--font-sofia-condensed);
+}
+
+[data-theme="convergence"] {
+  --dim-bg: #100820;
+  --dim-bg-secondary: #180c30;
+  --dim-text: #e8d8f8;
+  --dim-text-muted: #9060c0;
+  --dim-accent: #9664ff;
+  --dim-accent-2: #daa520;
+  --dim-border: rgba(150, 100, 255, 0.2);
+  --dim-glow: rgba(150, 100, 255, 0.1);
+  --dim-font-primary: var(--font-playfair);
+  --dim-font-secondary: var(--font-sofia-condensed);
+}
+
+[data-theme="codex"] {
+  --dim-bg: #0e0a04;
+  --dim-bg-secondary: #1a1408;
+  --dim-text: #e8dfc0;
+  --dim-text-muted: #907848;
+  --dim-accent: #c89632;
+  --dim-accent-2: #9c6820;
+  --dim-border: rgba(200, 150, 50, 0.2);
+  --dim-glow: rgba(200, 150, 50, 0.06);
+  --dim-font-primary: var(--font-cutive-mono);
+  --dim-font-secondary: var(--font-cutive-mono);
+}
+
+[data-theme="signal"] {
+  --dim-bg: #0a0a0a;
+  --dim-bg-secondary: #111111;
+  --dim-text: #f0f0f0;
+  --dim-text-muted: #606060;
+  --dim-accent: #ff2233;
+  --dim-accent-2: #ffffff;
+  --dim-border: rgba(255, 34, 51, 0.25);
+  --dim-glow: rgba(255, 34, 51, 0.08);
+  --dim-font-primary: var(--font-space-mono);
+  --dim-font-secondary: var(--font-space-mono);
+}
+
+[data-theme="archive"] {
+  --dim-bg: #0c0c10;
+  --dim-bg-secondary: #12121a;
+  --dim-text: rgba(220, 220, 235, 0.5);
+  --dim-text-muted: rgba(160, 160, 180, 0.35);
+  --dim-accent: rgba(160, 160, 200, 0.4);
+  --dim-accent-2: rgba(120, 120, 160, 0.3);
+  --dim-border: rgba(180, 180, 220, 0.08);
+  --dim-glow: rgba(180, 180, 220, 0.03);
+  --dim-font-primary: var(--font-space-grotesk);
+  --dim-font-secondary: var(--font-inter);
+}
