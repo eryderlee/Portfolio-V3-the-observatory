@@ -8,6 +8,7 @@ import {
   Space_Mono,
 } from 'next/font/google'
 import './globals.css'
+import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -70,7 +71,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={fontVariables}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+      </body>
     </html>
   )
 }
