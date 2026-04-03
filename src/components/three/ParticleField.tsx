@@ -4,80 +4,125 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-const PARTICLE_COUNT = 2000
-const SPREAD_XY = 22
-const SPREAD_Z = 12
-const FALL_SPEED_MIN = 0.003
-const FALL_SPEED_RANGE = 0.004
+const PARTICLE_COUNT = 3000
+const SPREAD_XY = 25
+const SPREAD_Z = 14
 
 export function ParticleField() {
-  const meshRef = useRef<THREE.Points>(null)
+  const pointsRef = useRef<THREE.Points>(null)
 
-  const { positions, speeds, sizes } = useMemo(() => {
-    const positions = new Float32Array(PARTICLE_COUNT * 3)
-    const speeds = new Float32Array(PARTICLE_COUNT)
-    const sizes = new Float32Array(PARTICLE_COUNT)
+  const { velocities, geometry, material } = useMemo(() => {
+    const positions  = new Float32Array(PARTICLE_COUNT * 3)
+    const velocities = new Float32Array(PARTICLE_COUNT * 3)
+    const alphas     = new Float32Array(PARTICLE_COUNT)
+    const sizes      = new Float32Array(PARTICLE_COUNT)
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3
-      positions[i3] = (Math.random() - 0.5) * SPREAD_XY
+
+      // Random positions scattered through the volume
+      positions[i3]     = (Math.random() - 0.5) * SPREAD_XY
       positions[i3 + 1] = (Math.random() - 0.5) * SPREAD_XY
       positions[i3 + 2] = (Math.random() - 0.5) * SPREAD_Z
-      speeds[i] = FALL_SPEED_MIN + Math.random() * FALL_SPEED_RANGE
-      sizes[i] = Math.random() * 0.6 + 0.2 // 0.2–0.8 size multiplier
-    }
 
-    return { positions, speeds, sizes }
-  }, [])
+      // Random 3D drift velocity — cubic bias toward near-zero (suspended in space)
+      const speed = Math.pow(Math.random(), 2.5) * 0.0022 + 0.00004
+      const theta = Math.random() * Math.PI * 2
+      const phi   = Math.acos(2 * Math.random() - 1)
+      velocities[i3]     = Math.sin(phi) * Math.cos(theta) * speed
+      velocities[i3 + 1] = Math.sin(phi) * Math.sin(theta) * speed
+      velocities[i3 + 2] = Math.cos(phi) * speed
 
-  useFrame((state) => {
-    if (!meshRef.current) return
-
-    const pos = meshRef.current.geometry.attributes.position
-      .array as Float32Array
-    const elapsed = state.clock.elapsedTime
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const i3 = i * 3
-      // Drift downward
-      pos[i3 + 1] -= speeds[i]
-      // Subtle lateral drift via sine wave
-      pos[i3] += Math.sin(elapsed * 0.1 + i * 0.01) * 0.0005
-
-      // Wrap particles from bottom to top
-      if (pos[i3 + 1] < -SPREAD_XY / 2) {
-        pos[i3 + 1] = SPREAD_XY / 2
-        pos[i3] = (Math.random() - 0.5) * SPREAD_XY
-        pos[i3 + 2] = (Math.random() - 0.5) * SPREAD_Z
+      // Distribution: mostly fine dim dust, a few anchor stars
+      const r = Math.random()
+      if (r < 0.72) {
+        // Fine cosmic dust — barely perceptible
+        alphas[i] = 0.04 + Math.random() * 0.10
+        sizes[i]  = 0.5  + Math.random() * 1.0
+      } else if (r < 0.92) {
+        // Mid-range specks
+        alphas[i] = 0.15 + Math.random() * 0.22
+        sizes[i]  = 1.2  + Math.random() * 2.8
+      } else {
+        // Brighter anchor particles (~8%)
+        alphas[i] = 0.45 + Math.random() * 0.40
+        sizes[i]  = 3.0  + Math.random() * 9.0
       }
     }
 
-    meshRef.current.geometry.attributes.position.needsUpdate = true
-    // Very slow rotation for depth effect
-    meshRef.current.rotation.y = elapsed * 0.015
-    meshRef.current.rotation.x = Math.sin(elapsed * 0.05) * 0.05
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geometry.setAttribute('a_alpha',  new THREE.BufferAttribute(alphas, 1))
+    geometry.setAttribute('a_size',   new THREE.BufferAttribute(sizes, 1))
+
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        u_color: { value: new THREE.Color('#c8d0e8') },
+      },
+      vertexShader: /* glsl */`
+        attribute float a_alpha;
+        attribute float a_size;
+        varying float v_alpha;
+
+        void main() {
+          v_alpha = a_alpha;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = a_size * (280.0 / -mv.z);
+          gl_Position  = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: /* glsl */`
+        uniform vec3 u_color;
+        varying float v_alpha;
+
+        void main() {
+          float d = length(gl_PointCoord - 0.5) * 2.0;
+          if (d > 1.0) discard;
+          // Soft glow falloff — brighter at center, fades to edge
+          float soft = 1.0 - smoothstep(0.0, 1.0, d);
+          gl_FragColor = vec4(u_color, v_alpha * soft);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+    })
+
+    return { velocities, geometry, material }
+  }, [])
+
+  useFrame((state) => {
+    if (!pointsRef.current) return
+
+    const pos  = pointsRef.current.geometry.attributes.position.array as Float32Array
+    const t    = state.clock.elapsedTime
+    const hXY  = SPREAD_XY / 2
+    const hZ   = SPREAD_Z  / 2
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const i3 = i * 3
+
+      // Drift + near-imperceptible wander (no directional bias)
+      pos[i3]     += velocities[i3]     + Math.sin(t * 0.07 + i * 0.19) * 0.00005
+      pos[i3 + 1] += velocities[i3 + 1] + Math.cos(t * 0.05 + i * 0.11) * 0.00005
+      pos[i3 + 2] += velocities[i3 + 2]
+
+      // Wrap — particles that drift out reappear on the opposite side
+      if (pos[i3]     >  hXY) pos[i3]     = -hXY
+      if (pos[i3]     < -hXY) pos[i3]     =  hXY
+      if (pos[i3 + 1] >  hXY) pos[i3 + 1] = -hXY
+      if (pos[i3 + 1] < -hXY) pos[i3 + 1] =  hXY
+      if (pos[i3 + 2] >  hZ)  pos[i3 + 2] = -hZ
+      if (pos[i3 + 2] < -hZ)  pos[i3 + 2] =  hZ
+    }
+
+    pointsRef.current.geometry.attributes.position.needsUpdate = true
+
+    // Barely perceptible slow rotation — adds depth without calling attention
+    pointsRef.current.rotation.y = t * 0.006
+    pointsRef.current.rotation.x = Math.sin(t * 0.03) * 0.025
   })
 
   return (
-    <points ref={meshRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3] as [Float32Array, number]}
-        />
-        <bufferAttribute
-          attach="attributes-size"
-          args={[sizes, 1] as [Float32Array, number]}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.025}
-        color="#c8d0e8"
-        transparent
-        opacity={0.55}
-        sizeAttenuation
-        depthWrite={false}
-      />
-    </points>
+    <points ref={pointsRef} geometry={geometry} material={material} />
   )
 }

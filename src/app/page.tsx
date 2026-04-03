@@ -22,14 +22,13 @@ export default function Home() {
           <section
             key={dim.id}
             data-theme={dim.id}
-            className="relative min-h-screen flex flex-col items-center justify-center"
+            className="relative"
             style={{ background: 'var(--dim-bg)' }}
           >
             <ThresholdPrompt
               label={dim.label}
-              heading={dim.name}
+              heading={dim.thresholdText}
               description={dim.description}
-              dimAccentColor={dim.accentColor}
             />
           </section>
         ))}

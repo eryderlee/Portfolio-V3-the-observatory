@@ -16,6 +16,7 @@ export interface Dimension {
   label: string
   description: string
   accentColor: string
+  thresholdText: string
 }
 
 export const DIMENSIONS: Dimension[] = [
@@ -25,6 +26,7 @@ export const DIMENSIONS: Dimension[] = [
     label: 'Hub',
     description: 'The space between spaces',
     accentColor: '#a0a8c0',
+    thresholdText: 'Step Into The Observatory',
   },
   {
     id: 'core',
@@ -32,6 +34,7 @@ export const DIMENSIONS: Dimension[] = [
     label: 'About',
     description: 'Where all paths converge',
     accentColor: '#daa520',
+    thresholdText: 'Enter The Core',
   },
   {
     id: 'celestial',
@@ -39,6 +42,7 @@ export const DIMENSIONS: Dimension[] = [
     label: 'Celestial',
     description: 'Where craft becomes art',
     accentColor: '#daa520',
+    thresholdText: 'Ascend to The Celestial Realm',
   },
   {
     id: 'abyss',
@@ -46,6 +50,7 @@ export const DIMENSIONS: Dimension[] = [
     label: 'Abyss',
     description: 'Depth without limit',
     accentColor: '#00c8b4',
+    thresholdText: 'Descend into The Abyss',
   },
   {
     id: 'convergence',
@@ -53,6 +58,7 @@ export const DIMENSIONS: Dimension[] = [
     label: 'Convergence',
     description: 'Neither here nor there',
     accentColor: '#9664ff',
+    thresholdText: 'Where Realities Collide',
   },
   {
     id: 'codex',
@@ -60,6 +66,7 @@ export const DIMENSIONS: Dimension[] = [
     label: 'Codex',
     description: 'Knowledge made permanent',
     accentColor: '#c89632',
+    thresholdText: 'Unseal The Codex',
   },
   {
     id: 'signal',
@@ -67,6 +74,7 @@ export const DIMENSIONS: Dimension[] = [
     label: 'Signal',
     description: 'Transmission in progress',
     accentColor: '#ff2233',
+    thresholdText: 'Tune In to The Signal',
   },
   {
     id: 'archive',
@@ -74,5 +82,6 @@ export const DIMENSIONS: Dimension[] = [
     label: 'Archive',
     description: 'What remains',
     accentColor: '#8888aa',
+    thresholdText: 'Echoes of Past Realities',
   },
 ]
