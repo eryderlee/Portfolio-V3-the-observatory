@@ -47,19 +47,18 @@ const PROJECTS: ProjectConfig[] = [
   { title: 'MVPcommunity',             position: [ 6, 40,    -60], tier: 2, transitionType: 'dive'    },
   { title: 'Baseaim',                  position: [ 0, 47,    -75], tier: 2, transitionType: 'dive'     },
   { title: 'Airtable Clone',           position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback' },
-  { title: 'The Observatory',          position: [-7, 118,   -90], tier: 3, transitionType: 'ascend', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
+  { title: 'The Observatory',          position: [-7, 118,  -105], tier: 3, transitionType: 'ascend', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
 ]
 
 // Baseaim archipelago — sub-islands rendered around the main Baseaim cluster stop
 // PLANE 2 (tier 2) — upper/behind the main island
 // PLANE 1 (tier 1) — lower/in-front, including the Funnels pipeline cluster
 const BASEAIM_SUBS: ClusterSubConfig[] = [
-  // — PLANE 2 —
-  { title: 'Baseaim.co Website',         position: [-8, 50, -81], scale: [4.8, 1.0, 4.0], tier: 2 },
-  { title: 'Baseaim Auditor Software',   position: [ 7, 51, -83], scale: [5.5, 1.1, 4.5], tier: 2 },
-  // — PLANE 1 —
-  { title: 'Baseaim Client Dashboard',   position: [-7, 44, -70], scale: [4.5, 0.9, 3.5], tier: 1 },
-  { title: 'Baseaim Funnels',           position: [ 6, 45, -73], scale: [5.5, 1.1, 4.5], tier: 1 },
+  // — PLANE 1 (all Baseaim sub-islands) —
+  { title: 'Baseaim.co Website',         position: [-8, 42,   -66], scale: [4.8, 1.0, 4.0], tier: 1 },
+  { title: 'Baseaim Auditor Software',   position: [ 7, 42.5, -68], scale: [5.5, 1.1, 4.5], tier: 1 },
+  { title: 'Baseaim Client Dashboard',   position: [-7, 44,   -70], scale: [4.5, 0.9, 3.5], tier: 1 },
+  { title: 'Baseaim Funnels',           position: [ 6, 45,   -73], scale: [5.5, 1.1, 4.5], tier: 1 },
   // Funnel pipeline — minimal text labels, cascading arc off the Funnels island
   { title: 'AB Tested VSLs',            position: [10, 44.5, -70], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
   { title: 'Preframe',                  position: [12, 44,   -72], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
@@ -134,11 +133,13 @@ function buildCameraPath(projects: ProjectConfig[]): {
       )
       push(cu, proj.position)
     } else if (proj.transitionType === 'ascend') {
-      // Rise straight up — intermediate at same X/Z as final island, pure Y movement
-      push(
-        new THREE.Vector3(proj.position[0], prevCu.y + 5, proj.position[2] + 3),
-        proj.position,
-      )
+      // Force straight vertical: 4 intermediates all share Observatory's exact X/Z.
+      // CatmullRomCurve3 cannot deviate in X or Z when all control points are collinear.
+      const yRange = cu.y - prevCu.y
+      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.2,  cu.z), proj.position)
+      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.45, cu.z), proj.position)
+      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.70, cu.z), proj.position)
+      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.90, cu.z), proj.position)
       push(cu, proj.position)
     }
   }
@@ -197,7 +198,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
 
       {/* Tier 3 lights — Z -90 to -120 */}
       <pointLight position={[-7, 64.5,  -88]} intensity={14} color="#f5e080" distance={65} decay={1.5} />
-      <pointLight position={[-7, 116, -88]}  intensity={9}  color="#f5e080" distance={55} decay={1.5} />
+      <pointLight position={[-7, 116, -103]} intensity={9}  color="#f5e080" distance={55} decay={1.5} />
       <pointLight position={[ 0, 80,   -118]} intensity={8}  color="#f0d060" distance={45} decay={2} />
 
       {/* Sparkles at each tier's depth midpoint */}
@@ -222,21 +223,16 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
           ? p.customScale[1] / 2 + 1.5
           : PLATFORM_Y_OFFSETS[p.tier]
         return (
-          <group
-            key={p.title}
-            position={p.rotation ? p.position : [0, 0, 0]}
-            rotation={p.rotation ?? [0, 0, 0]}
-          >
+          <group key={p.title}>
             <CloudPlatform
-              position={p.rotation
-                ? [0, -yOffset, 0]
-                : [p.position[0], p.position[1] - yOffset, p.position[2]]}
+              position={[p.position[0], p.position[1] - yOffset, p.position[2]]}
               scale={scale}
+              rotation={p.rotation}
               emissive={p.tier >= 2}
               bright={p.tier === 3}
             />
             <ProjectCard
-              position={p.rotation ? [0, 0, 0] : p.position}
+              position={p.position}
               title={p.title}
               tier={p.tier}
               description={p.description}

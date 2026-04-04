@@ -9,9 +9,10 @@ interface CloudPlatformProps {
   scale: [number, number, number]
   emissive?: boolean
   bright?: boolean
+  rotation?: [number, number, number]
 }
 
-export function CloudPlatform({ position, scale, emissive = false, bright = false }: CloudPlatformProps) {
+export function CloudPlatform({ position, scale, emissive = false, bright = false, rotation }: CloudPlatformProps) {
   const groupRef = useRef<THREE.Group>(null)
   const emissiveIntensity = bright ? 0.9 : emissive ? 0.45 : 0.08
   const baseColor = bright ? '#f5e088' : emissive ? '#daa520' : '#e8d8a8'
@@ -36,7 +37,7 @@ export function CloudPlatform({ position, scale, emissive = false, bright = fals
   }, [])
 
   return (
-    <group ref={groupRef} position={position}>
+    <group ref={groupRef} position={position} rotation={rotation ?? [0, 0, 0]}>
       {/* Main platform body */}
       <RoundedBox args={[scale[0], scale[1], scale[2]]} radius={0.35} smoothness={4}>
         <meshStandardMaterial
