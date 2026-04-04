@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Sparkles } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
@@ -20,73 +20,117 @@ function lookAtQuat(
   return new THREE.Quaternion().setFromRotationMatrix(m)
 }
 
-// 20 control points: entry, zigzag with varied transitions, finale.
-// Islands span deep Z (T1: -5→-25, T2: -32→-55, T3: -60→-75) for massive scale.
-// Transition patterns — no two consecutive the same:
-//   DIVE:      fly past current island, push deeper in Z without pulling back
-//   SWEEP:     prominent lateral X-arc while advancing Z moderately
-//   PULL-BACK: retract in Z for dramatic tier reveal (T1→T2 and T2→T3)
-// Sequence: dive, sweep, pull-back, sweep, dive, pull-back, dive
-const CURVE_POINTS = [
-  new THREE.Vector3(0, -14, 11),       //  1: entry — wide, far below
-  new THREE.Vector3(-3, -2, 3),        //  2: approach Spline from above-right
-  new THREE.Vector3(-5, 1.5, -2),      //  3: CLOSE – Spline Experiments
-  new THREE.Vector3(2, 4.5, -8),       //  4: DIVE → CYS: swing right, push deeper
-  new THREE.Vector3(5, 6.5, -12),      //  5: CLOSE – CYS Accountants
-  new THREE.Vector3(-3, 9, -16),       //  6: SWEEP → AIWeb: arc left, moderate Z advance
-  new THREE.Vector3(0, 13.5, -22),     //  7: CLOSE – AI Website
-  new THREE.Vector3(3, 22, -8),        //  8: PULL-BACK (T1→T2): rise high, big Z retract
-  new THREE.Vector3(-5, 28, -26),      //  9: approach Ryder: sweep left, push forward
-  new THREE.Vector3(-7, 33, -29),      // 10: CLOSE – RyderDigital
-  new THREE.Vector3(2, 37, -36),       // 11: SWEEP → MVP: swing right, moderate Z advance
-  new THREE.Vector3(6, 41, -42),       // 12: CLOSE – MVPcommunity
-  new THREE.Vector3(1, 45, -47),       // 13: DIVE → Baseaim: push deeper, drift center
-  new THREE.Vector3(0, 48, -52),       // 14: CLOSE – Baseaim.co Website
-  new THREE.Vector3(4, 56, -38),       // 15: PULL-BACK (T2→T3): rise, big Z retract
-  new THREE.Vector3(-4, 61, -50),      // 16: approach Airtable: sweep left, dive forward
-  new THREE.Vector3(-7, 65.5, -57),    // 17: CLOSE – Airtable Clone
-  new THREE.Vector3(3, 70, -62),       // 18: DIVE → Dashboard: swing right, push deeper
-  new THREE.Vector3(6, 74.5, -67),     // 19: CLOSE – Baseaim Client Dashboard
-  new THREE.Vector3(0, 82, -72),       // 20: finale — gaze toward Apex
+interface ProjectConfig {
+  title: string
+  position: [number, number, number]
+  tier: 1 | 2 | 3
+  transitionType: 'first' | 'dive' | 'sweep' | 'pullback'
+}
+
+// Tier 1: Z=-5 to -30  |  Tier 2: Z=-40 to -75  |  Tier 3: Z=-85 to -120
+const PROJECTS: ProjectConfig[] = [
+  { title: 'Spline Experiments',       position: [-4,  0.8,  -10], tier: 1, transitionType: 'first'    },
+  { title: 'CYS Accountants',          position: [ 5,  5.8,  -20], tier: 1, transitionType: 'dive'     },
+  { title: 'AI Website',               position: [ 0, 12.8,  -30], tier: 1, transitionType: 'sweep'    },
+  { title: 'RyderDigital',             position: [-7, 32,    -45], tier: 2, transitionType: 'pullback' },
+  { title: 'MVPcommunity',             position: [ 6, 40,    -60], tier: 2, transitionType: 'sweep'    },
+  { title: 'Baseaim.co Website',       position: [ 0, 47,    -75], tier: 2, transitionType: 'dive'     },
+  { title: 'Airtable Clone',           position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback' },
+  { title: 'Baseaim Client Dashboard', position: [ 6, 73.5, -110], tier: 3, transitionType: 'dive'     },
 ]
 
-// Island card centers (lookAt targets for close-up keyframes):
-// Spline[-5,0.8,-5], CYS[5,5.8,-15], AIWeb[0,12.8,-25],
-// Ryder[-7,32,-32], MVP[6,40,-45], Baseaim[0,47,-55],
-// Airtable[-7,64.5,-60], Dashboard[6,73.5,-70], Apex[0,78,-75]
-const Q_KEYFRAMES = [
-  lookAtQuat([0, -14, 11],     [-5, 0, -5]),           //  1: look toward Spline
-  lookAtQuat([-3, -2, 3],      [-5, 0.8, -5]),         //  2: look at Spline card
-  lookAtQuat([-5, 1.5, -2],    [-5, 0.8, -5]),         //  3: CLOSE – Spline (centered on card)
-  lookAtQuat([2, 4.5, -8],     [5, 5.8, -15]),         //  4: look at CYS
-  lookAtQuat([5, 6.5, -12],    [5, 5.8, -15]),         //  5: CLOSE – CYS
-  lookAtQuat([-3, 9, -16],     [0, 12.8, -25]),        //  6: look toward AIWeb
-  lookAtQuat([0, 13.5, -22],   [0, 12.8, -25]),        //  7: CLOSE – AIWeb
-  lookAtQuat([3, 22, -8],      [-7, 32, -32]),         //  8: pull-back — look deep at Ryder
-  lookAtQuat([-5, 28, -26],    [-7, 32, -32]),         //  9: look at Ryder
-  lookAtQuat([-7, 33, -29],    [-7, 32, -32]),         // 10: CLOSE – Ryder
-  lookAtQuat([2, 37, -36],     [6, 40, -45]),          // 11: look at MVP
-  lookAtQuat([6, 41, -42],     [6, 40, -45]),          // 12: CLOSE – MVP
-  lookAtQuat([1, 45, -47],     [0, 47, -55]),          // 13: look at Baseaim
-  lookAtQuat([0, 48, -52],     [0, 47, -55]),          // 14: CLOSE – Baseaim
-  lookAtQuat([4, 56, -38],     [-7, 64.5, -60]),       // 15: pull-back — look deep at Airtable
-  lookAtQuat([-4, 61, -50],    [-7, 64.5, -60]),       // 16: look at Airtable
-  lookAtQuat([-7, 65.5, -57],  [-7, 64.5, -60]),       // 17: CLOSE – Airtable
-  lookAtQuat([3, 70, -62],     [6, 73.5, -70]),        // 18: look at Dashboard
-  lookAtQuat([6, 74.5, -67],   [6, 73.5, -70]),        // 19: CLOSE – Dashboard
-  lookAtQuat([0, 82, -72],     [0, 78, -75]),          // 20: finale – Apex
-]
+// Scenic apex platform — no project card
+const APEX: [number, number, number] = [0, 80, -120]
+
+const PLATFORM_SCALES: Record<1 | 2 | 3, [number, number, number]> = {
+  1: [4.5, 0.9, 3.5],
+  2: [6.5, 1.3, 5.5],
+  3: [9,   2,   7.5],
+}
+
+// How far below the card position the platform centre sits (increases with tier scale)
+const PLATFORM_Y_OFFSETS: Record<1 | 2 | 3, number> = { 1: 1.8, 2: 2.0, 3: 2.5 }
+
+// ---------------------------------------------------------------------------
+// Camera path generator
+// ---------------------------------------------------------------------------
+// Close-up = project position + Z+3 (pull 3 units toward viewer, same X/Y).
+// dive     → straight to close-up, no intermediate keyframe
+// sweep    → arc through a wide-X midpoint (opposite X direction) at mid-Y/Z
+// pullback → retract toward viewer in Z (prevZ+15) at mid-Y, then dive in
+// ---------------------------------------------------------------------------
+function buildCameraPath(projects: ProjectConfig[]): {
+  curve: THREE.CatmullRomCurve3
+  quaternions: THREE.Quaternion[]
+} {
+  const points: THREE.Vector3[] = []
+  const quats:  THREE.Quaternion[] = []
+
+  const closeUpOf = (p: ProjectConfig) =>
+    new THREE.Vector3(p.position[0], p.position[1], p.position[2] + 3)
+
+  const push = (v: THREE.Vector3, lookAt: [number, number, number]) => {
+    points.push(v)
+    quats.push(lookAtQuat([v.x, v.y, v.z], lookAt))
+  }
+
+  // Entry — below and in front of first island
+  const first = projects[0]
+  push(
+    new THREE.Vector3(0, first.position[1] - 14, first.position[2] + 11),
+    first.position,
+  )
+  // First close-up (no transition in)
+  push(closeUpOf(first), first.position)
+
+  for (let i = 1; i < projects.length; i++) {
+    const proj   = projects[i]
+    const cu     = closeUpOf(proj)
+    const prevCu = closeUpOf(projects[i - 1])
+
+    if (proj.transitionType === 'dive') {
+      push(cu, proj.position)
+    } else if (proj.transitionType === 'sweep') {
+      // Swing wide on X in the direction opposite to the target island
+      push(
+        new THREE.Vector3(
+          proj.position[0] >= 0 ? -9 : 9,
+          (prevCu.y + cu.y) / 2,
+          (prevCu.z + cu.z) / 2,
+        ),
+        proj.position,
+      )
+      push(cu, proj.position)
+    } else if (proj.transitionType === 'pullback') {
+      // Retract toward viewer before diving in
+      push(
+        new THREE.Vector3(prevCu.x, (prevCu.y + cu.y) / 2, prevCu.z + 15),
+        proj.position,
+      )
+      push(cu, proj.position)
+    }
+  }
+
+  // Finale — pull slightly above last close-up
+  const last   = projects[projects.length - 1]
+  const lastCu = closeUpOf(last)
+  push(new THREE.Vector3(0, last.position[1] + 8, lastCu.z), last.position)
+
+  return { curve: new THREE.CatmullRomCurve3(points), quaternions: quats }
+}
+
+const { curve: CURVE, quaternions: Q_KEYFRAMES } = buildCameraPath(PROJECTS)
+
+// ---------------------------------------------------------------------------
 
 function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   const { camera, scene } = useThree()
   const smoothProgress = useRef(0)
-  const curve = useMemo(() => new THREE.CatmullRomCurve3(CURVE_POINTS), [])
   const qStart = useRef(new THREE.Quaternion())
-  const qEnd = useRef(new THREE.Quaternion())
+  const qEnd   = useRef(new THREE.Quaternion())
 
   useEffect(() => {
-    const fog = new THREE.FogExp2(new THREE.Color('#1e1004'), 0.016)
-    scene.fog = fog
+    scene.fog = new THREE.FogExp2(new THREE.Color('#1e1004'), 0.005)
     return () => { scene.fog = null }
   }, [scene])
 
@@ -95,12 +139,11 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
     smoothProgress.current = THREE.MathUtils.damp(smoothProgress.current, target, 4, delta)
     const t = Math.max(0, Math.min(1, smoothProgress.current))
 
-    const pos = curve.getPoint(t)
-    camera.position.copy(pos)
+    camera.position.copy(CURVE.getPoint(t))
 
     const segment = t * (Q_KEYFRAMES.length - 1)
-    const segIdx = Math.min(Math.floor(segment), Q_KEYFRAMES.length - 2)
-    const segT = segment - Math.floor(segment)
+    const segIdx  = Math.min(Math.floor(segment), Q_KEYFRAMES.length - 2)
+    const segT    = segment - Math.floor(segment)
     qStart.current.copy(Q_KEYFRAMES[segIdx])
     qEnd.current.copy(Q_KEYFRAMES[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
@@ -109,55 +152,52 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
   return (
     <>
       <ambientLight intensity={0.25} color="#daa520" />
-      {/* Tier 1 lights — near each island */}
-      <pointLight position={[-3, 2, -5]}    intensity={8}  color="#f5e080" distance={35} decay={1.5} />
-      <pointLight position={[3, 8, -15]}    intensity={3}  color="#daa520" distance={22} decay={2} />
-      <pointLight position={[0, 14, -25]}   intensity={4}  color="#f0d060" distance={28} decay={2} />
-      {/* Tier 2 lights */}
-      <pointLight position={[-4, 33, -32]}  intensity={10} color="#f5e080" distance={42} decay={1.5} />
-      <pointLight position={[4, 43, -50]}   intensity={5}  color="#f0d060" distance={32} decay={2} />
-      {/* Tier 3 lights */}
-      <pointLight position={[-4, 65, -60]}  intensity={14} color="#f5e080" distance={50} decay={1.5} />
-      <pointLight position={[5, 74, -70]}   intensity={6}  color="#daa520" distance={35} decay={2} />
-      <pointLight position={[0, 79, -75]}   intensity={9}  color="#f0d060" distance={35} decay={2} />
 
-      {/* Sparkles centred at each tier's Z midpoint to cover full depth range */}
-      <group position={[0, 5, -15]}>
-        <Sparkles count={150} scale={[35, 35, 28]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
-        <Sparkles count={80}  scale={[25, 25, 22]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
+      {/* Tier 1 lights — Z -10 to -30 */}
+      <pointLight position={[-4,  0.8,  -8]} intensity={8}  color="#f5e080" distance={40} decay={1.5} />
+      <pointLight position={[ 5,  5.8, -18]} intensity={4}  color="#daa520" distance={25} decay={2} />
+      <pointLight position={[ 0, 12.8, -28]} intensity={4}  color="#f0d060" distance={28} decay={2} />
+
+      {/* Tier 2 lights — Z -45 to -75 */}
+      <pointLight position={[-7, 32,   -43]} intensity={10} color="#f5e080" distance={55} decay={1.5} />
+      <pointLight position={[ 6, 40,   -58]} intensity={5}  color="#f0d060" distance={38} decay={2} />
+      <pointLight position={[ 0, 47,   -73]} intensity={5}  color="#daa520" distance={38} decay={2} />
+
+      {/* Tier 3 lights — Z -90 to -120 */}
+      <pointLight position={[-7, 64.5,  -88]} intensity={14} color="#f5e080" distance={65} decay={1.5} />
+      <pointLight position={[ 6, 73.5, -108]} intensity={6}  color="#daa520" distance={40} decay={2} />
+      <pointLight position={[ 0, 80,   -118]} intensity={8}  color="#f0d060" distance={45} decay={2} />
+
+      {/* Sparkles at each tier's depth midpoint */}
+      <group position={[0,  5,  -20]}>
+        <Sparkles count={150} scale={[30, 30, 25]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
+        <Sparkles count={80}  scale={[22, 22, 20]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
       </group>
-      <group position={[0, 38, -43]}>
-        <Sparkles count={150} scale={[35, 35, 30]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
-        <Sparkles count={80}  scale={[25, 25, 25]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
+      <group position={[0, 40,  -58]}>
+        <Sparkles count={150} scale={[30, 30, 35]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
+        <Sparkles count={80}  scale={[22, 22, 28]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
       </group>
-      <group position={[0, 68, -67]}>
-        <Sparkles count={150} scale={[35, 35, 25]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
-        <Sparkles count={80}  scale={[25, 25, 20]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
-        <Sparkles count={50}  scale={[18, 18, 15]} size={8}   speed={0.04} opacity={0.28} color="#ffffff" />
+      <group position={[0, 68, -100]}>
+        <Sparkles count={150} scale={[30, 30, 35]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
+        <Sparkles count={80}  scale={[22, 22, 28]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
+        <Sparkles count={50}  scale={[16, 16, 20]} size={8}   speed={0.04} opacity={0.28} color="#ffffff" />
       </group>
 
-      {/* Tier 1 — Y ≈ 0–15, Z scattered from -5 to -25 */}
-      <CloudPlatform position={[-5, -1, -5]}   scale={[4.5, 0.9, 3.5]} />
-      <CloudPlatform position={[5, 4, -15]}    scale={[3.5, 0.7, 2.8]} />
-      <CloudPlatform position={[0, 11, -25]}   scale={[5.5, 0.8, 4.2]} />
-      <ProjectCard position={[-5, 0.8, -5]}    title="Spline Experiments" tier={1} />
-      <ProjectCard position={[5, 5.8, -15]}    title="CYS Accountants"   tier={1} />
-      <ProjectCard position={[0, 12.8, -25]}   title="AI Website"        tier={1} />
+      {/* Islands — auto-placed from PROJECTS data */}
+      {PROJECTS.map((p) => (
+        <group key={p.title}>
+          <CloudPlatform
+            position={[p.position[0], p.position[1] - PLATFORM_Y_OFFSETS[p.tier], p.position[2]]}
+            scale={PLATFORM_SCALES[p.tier]}
+            emissive={p.tier >= 2}
+            bright={p.tier === 3}
+          />
+          <ProjectCard position={p.position} title={p.title} tier={p.tier} />
+        </group>
+      ))}
 
-      {/* Tier 2 — Y ≈ 30–47, Z scattered from -32 to -55 */}
-      <CloudPlatform position={[-7, 30, -32]}  scale={[6.5, 1.3, 5.5]} emissive />
-      <CloudPlatform position={[6, 38, -45]}   scale={[5.5, 1.1, 4.5]} emissive />
-      <CloudPlatform position={[0, 45, -55]}   scale={[8, 1.4, 6]}     emissive />
-      <ProjectCard position={[-7, 32, -32]}    title="RyderDigital"       tier={2} />
-      <ProjectCard position={[6, 40, -45]}     title="MVPcommunity"       tier={2} />
-      <ProjectCard position={[0, 47, -55]}     title="Baseaim.co Website" tier={2} />
-
-      {/* Tier 3 — Y ≈ 62–80, Z scattered from -60 to -75 */}
-      <CloudPlatform position={[-7, 62, -60]}  scale={[9, 2, 7.5]}   emissive bright />
-      <CloudPlatform position={[6, 71, -70]}   scale={[8, 1.8, 6.5]} emissive bright />
-      <CloudPlatform position={[0, 78, -75]}   scale={[13, 2.5, 10]} emissive bright />
-      <ProjectCard position={[-7, 64.5, -60]}  title="Airtable Clone"           tier={3} />
-      <ProjectCard position={[6, 73.5, -70]}   title="Baseaim Client Dashboard" tier={3} />
+      {/* Apex platform — scenic finale, no card */}
+      <CloudPlatform position={APEX} scale={[13, 2.5, 10]} emissive bright />
 
       <EffectComposer>
         <Bloom luminanceThreshold={0.28} luminanceSmoothing={0.85} intensity={1.4} mipmapBlur />
@@ -169,7 +209,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
 export default function CelestialScene({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   return (
     <Canvas
-      camera={{ position: [0, -14, 11], fov: 55, near: 0.1, far: 200 }}
+      camera={{ position: [0, -13.2, 1], fov: 55, near: 0.1, far: 350 }}
       dpr={[1, 1.5]}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
       style={{ background: '#0d0702' }}
