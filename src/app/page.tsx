@@ -1,6 +1,7 @@
 import { Observatory } from '@/components/observatory/Observatory'
 import { SceneWrapper } from '@/components/three/SceneWrapper'
 import { ThresholdPrompt } from '@/components/ui/ThresholdPrompt'
+import { CelestialRealm } from '@/components/celestial/CelestialRealm'
 import { DIMENSIONS } from '@/lib/constants'
 
 export default function Home() {
@@ -31,6 +32,7 @@ export default function Home() {
               description={dim.description}
               dimensionId={dim.id}
             />
+            {dim.id === 'celestial' && <CelestialRealm />}
           </section>
         ))}
       </main>

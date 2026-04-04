@@ -40,6 +40,10 @@ export function ThresholdPrompt({ label, heading, description, dimensionId }: Th
     hasEntered.current = true
     setIsOpen(false)
     lenis?.start()
+    if (triggerRef.current) {
+      const target = triggerRef.current.offsetTop + triggerRef.current.offsetHeight
+      lenis?.scrollTo(target, { duration: 1.2 } as Record<string, unknown>)
+    }
   }, [lenis])
 
   const handleBack = useCallback(() => {
