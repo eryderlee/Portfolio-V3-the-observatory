@@ -33,7 +33,7 @@ export default function Home() {
               description={dim.description}
               dimensionId={dim.id}
             />
-            {dim.id === 'celestial' && <CelestialRealm />}
+            {dim.id === 'celestial' ? <CelestialRealm /> : <div className="min-h-[200vh]" />}
           </section>
         ))}
       </main>

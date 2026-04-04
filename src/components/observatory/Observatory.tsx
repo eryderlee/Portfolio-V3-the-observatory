@@ -6,7 +6,7 @@ export function Observatory({ className = '' }: ObservatoryProps) {
   return (
     <section
       data-theme="observatory"
-      className={`relative min-h-screen flex flex-col items-center justify-center ${className}`}
+      className={`relative min-h-[200vh] flex flex-col items-center justify-center ${className}`}
     >
       {/* Content sits above the fixed canvas (z-index > 0) */}
       <div className="relative z-10 flex flex-col items-center gap-8 px-6 text-center">
