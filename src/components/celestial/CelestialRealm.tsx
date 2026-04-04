@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 // Canvas + R3F scene — no SSR (WebGL requires browser)
 const CelestialScene = dynamic(() => import('./CelestialScene'), { ssr: false })
 
-const PLANE_THRESHOLDS = [0.32, 0.66]
+const PLANE_THRESHOLDS = [0.37, 0.74]
 
 export function CelestialRealm() {
   const sectionRef = useRef<HTMLDivElement>(null)
@@ -49,7 +49,7 @@ export function CelestialRealm() {
   }, [])
 
   return (
-    <div ref={sectionRef} style={{ position: 'relative', height: '600vh' }}>
+    <div ref={sectionRef} style={{ position: 'relative', height: '1000vh' }}>
       {/* Sticky viewport — canvas + overlay both live here, scroll through the 400vh outer div */}
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
 
