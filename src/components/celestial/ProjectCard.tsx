@@ -6,6 +6,7 @@ interface ProjectCardProps {
   position: [number, number, number]
   title: string
   tier: 1 | 2 | 3
+  description?: string
 }
 
 const TIER_STYLES = {
@@ -29,7 +30,7 @@ const TIER_STYLES = {
   },
 }
 
-export function ProjectCard({ position, title, tier }: ProjectCardProps) {
+export function ProjectCard({ position, title, tier, description }: ProjectCardProps) {
   const s = TIER_STYLES[tier]
 
   return (
@@ -72,6 +73,24 @@ export function ProjectCard({ position, title, tier }: ProjectCardProps) {
         >
           {title}
         </div>
+
+        {description && (
+          <div
+            style={{
+              marginTop: '8px',
+              fontSize: '10px',
+              color: s.text,
+              fontFamily: 'var(--font-playfair)',
+              fontStyle: 'italic',
+              opacity: 0.75,
+              lineHeight: 1.4,
+              maxWidth: '200px',
+              whiteSpace: 'normal',
+            }}
+          >
+            {description}
+          </div>
+        )}
 
         <div
           style={{
