@@ -5,7 +5,6 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Sparkles } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
-import { useSceneContext } from '@/components/providers/SceneContext'
 import { CloudPlatform } from './CloudPlatform'
 import { ProjectCard } from './ProjectCard'
 
@@ -29,8 +28,7 @@ const Q_KEYFRAMES = [
   new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.1, 0, 0)),
 ]
 
-function CelestialSceneContent() {
-  const { celestialProgress } = useSceneContext()
+function CelestialSceneContent({ celestialProgress }: { celestialProgress: number }) {
   const { camera, scene } = useThree()
   const progressRef = useRef(0)
   const curve = useMemo(() => new THREE.CatmullRomCurve3(CURVE_POINTS), [])
@@ -121,8 +119,8 @@ function CelestialSceneContent() {
   )
 }
 
-export function CelestialScene() {
+export function CelestialScene({ celestialProgress }: { celestialProgress: number }) {
   return (
-    <CelestialSceneContent />
+    <CelestialSceneContent celestialProgress={celestialProgress} />
   )
 }

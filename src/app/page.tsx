@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import { Observatory } from '@/components/observatory/Observatory'
 import { SceneWrapper } from '@/components/three/SceneWrapper'
 import { ThresholdPrompt } from '@/components/ui/ThresholdPrompt'
@@ -7,6 +10,8 @@ import { DIMENSIONS } from '@/lib/constants'
 export default function Home() {
   // Dimensions after the observatory hub (skip first item)
   const portalDimensions = DIMENSIONS.slice(1)
+  // Only the threshold at currentThresholdIndex can trigger its overlay
+  const [currentThresholdIndex, setCurrentThresholdIndex] = useState(0)
 
   return (
     <>
@@ -19,7 +24,7 @@ export default function Home() {
         <Observatory />
 
         {/* Dimension sections */}
-        {portalDimensions.map((dim) => (
+        {portalDimensions.map((dim, i) => (
           <section
             key={dim.id}
             data-theme={dim.id}
@@ -31,6 +36,8 @@ export default function Home() {
               heading={dim.thresholdText}
               description={dim.description}
               dimensionId={dim.id}
+              isActive={i === currentThresholdIndex}
+              onEntered={() => setCurrentThresholdIndex(i + 1)}
             />
             {dim.id === 'celestial' && <CelestialRealm />}
           </section>

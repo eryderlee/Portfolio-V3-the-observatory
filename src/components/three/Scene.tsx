@@ -6,16 +6,20 @@ import { ParticleField } from './ParticleField'
 import { useSceneContext } from '@/components/providers/SceneContext'
 import { CelestialScene } from '@/components/celestial/CelestialScene'
 
-function SceneContent() {
-  const { activeSection } = useSceneContext()
+// Context is read here, outside the R3F Canvas, to avoid reconciler boundary issues
+function SceneContent({ activeSection, celestialProgress }: { activeSection: string; celestialProgress: number }) {
   return (
     <Suspense fallback={null}>
-      {activeSection === 'celestial' ? <CelestialScene /> : <ParticleField />}
+      {activeSection === 'celestial'
+        ? <CelestialScene celestialProgress={celestialProgress} />
+        : <ParticleField />}
     </Suspense>
   )
 }
 
 export default function Scene() {
+  const { activeSection, celestialProgress } = useSceneContext()
+
   return (
     <div
       style={{
@@ -35,7 +39,7 @@ export default function Scene() {
           powerPreference: 'high-performance',
         }}
       >
-        <SceneContent />
+        <SceneContent activeSection={activeSection} celestialProgress={celestialProgress} />
       </Canvas>
     </div>
   )
