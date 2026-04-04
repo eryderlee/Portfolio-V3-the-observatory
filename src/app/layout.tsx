@@ -9,6 +9,7 @@ import {
 } from 'next/font/google'
 import './globals.css'
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider'
+import { SceneContextProvider } from '@/components/providers/SceneContext'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -72,7 +73,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={fontVariables}>
       <body className="antialiased">
-        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        <SceneContextProvider>
+          <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        </SceneContextProvider>
       </body>
     </html>
   )
