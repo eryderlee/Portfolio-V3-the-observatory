@@ -22,10 +22,19 @@ function lookAtQuat(
 
 interface ProjectConfig {
   title: string
+  description?: string
   position: [number, number, number]
   tier: 1 | 2 | 3
   transitionType: 'first' | 'dive' | 'sweep' | 'pullback' | 'ascend'
   rotation?: [number, number, number]
+  customScale?: [number, number, number]
+}
+
+interface ClusterSubConfig {
+  title: string
+  position: [number, number, number]
+  scale: [number, number, number]
+  tier: 1 | 2 | 3
 }
 
 // Tier 1: Z=-5 to -30  |  Tier 2: Z=-40 to -75  |  Tier 3: Z=-85 to -120
@@ -35,9 +44,17 @@ const PROJECTS: ProjectConfig[] = [
   { title: 'AI Website',               position: [ 0, 12.8,  -30], tier: 1, transitionType: 'dive'    },
   { title: 'RyderDigital',             position: [-7, 32,    -45], tier: 2, transitionType: 'pullback' },
   { title: 'MVPcommunity',             position: [ 6, 40,    -60], tier: 2, transitionType: 'dive'    },
-  { title: 'Baseaim.co Website',       position: [ 0, 47,    -75], tier: 2, transitionType: 'dive'     },
+  { title: 'Baseaim',                  position: [ 0, 47,    -75], tier: 2, transitionType: 'dive'     },
   { title: 'Airtable Clone',           position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback' },
-  { title: 'Baseaim Client Dashboard', position: [-7, 118, -90], tier: 3, transitionType: 'ascend', rotation: [0.35, 0, 0] },
+  { title: 'The Observatory',          position: [-7, 118,   -90], tier: 3, transitionType: 'ascend', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
+]
+
+// Baseaim archipelago — sub-islands rendered around the main Baseaim cluster stop
+const BASEAIM_SUBS: ClusterSubConfig[] = [
+  { title: 'Baseaim Client Dashboard',   position: [-7, 49, -83], scale: [6.5, 1.3, 5.5], tier: 2 },
+  { title: 'Baseaim Landing Page + VSL', position: [ 8, 46, -81], scale: [5.8, 1.2, 5.0], tier: 2 },
+  { title: 'Baseaim.co Website',         position: [-8, 44, -69], scale: [4.8, 1.0, 4.0], tier: 1 },
+  { title: 'Baseaim Onboarding',         position: [ 9, 43, -68], scale: [3.5, 0.8, 3.0], tier: 1 },
 ]
 
 // Scenic apex platform — no project card
@@ -110,9 +127,9 @@ function buildCameraPath(projects: ProjectConfig[]): {
       )
       push(cu, proj.position)
     } else if (proj.transitionType === 'ascend') {
-      // Tilt gaze upward to reveal the island far above, then rise toward it
+      // Rise straight up — intermediate directly below the final island, same X/Z
       push(
-        new THREE.Vector3(prevCu.x, prevCu.y + 7, prevCu.z + 4),
+        new THREE.Vector3(proj.position[0], prevCu.y + 7, proj.position[2] + 3),
         proj.position,
       )
       push(cu, proj.position)
@@ -192,24 +209,47 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
       </group>
 
       {/* Islands — auto-placed from PROJECTS data */}
-      {PROJECTS.map((p) => (
-        <group
-          key={p.title}
-          position={p.rotation ? p.position : [0, 0, 0]}
-          rotation={p.rotation ?? [0, 0, 0]}
-        >
+      {PROJECTS.map((p) => {
+        const scale = p.customScale ?? PLATFORM_SCALES[p.tier]
+        const yOffset = p.customScale
+          ? p.customScale[1] / 2 + 1.5
+          : PLATFORM_Y_OFFSETS[p.tier]
+        return (
+          <group
+            key={p.title}
+            position={p.rotation ? p.position : [0, 0, 0]}
+            rotation={p.rotation ?? [0, 0, 0]}
+          >
+            <CloudPlatform
+              position={p.rotation
+                ? [0, -yOffset, 0]
+                : [p.position[0], p.position[1] - yOffset, p.position[2]]}
+              scale={scale}
+              emissive={p.tier >= 2}
+              bright={p.tier === 3}
+            />
+            <ProjectCard
+              position={p.rotation ? [0, 0, 0] : p.position}
+              title={p.title}
+              tier={p.tier}
+              description={p.description}
+            />
+          </group>
+        )
+      })}
+
+      {/* Baseaim archipelago sub-islands */}
+      {BASEAIM_SUBS.map(sub => (
+        <group key={sub.title}>
           <CloudPlatform
-            position={p.rotation
-              ? [0, -PLATFORM_Y_OFFSETS[p.tier], 0]
-              : [p.position[0], p.position[1] - PLATFORM_Y_OFFSETS[p.tier], p.position[2]]}
-            scale={PLATFORM_SCALES[p.tier]}
-            emissive={p.tier >= 2}
-            bright={p.tier === 3}
+            position={[sub.position[0], sub.position[1] - 1.8, sub.position[2]]}
+            scale={sub.scale}
+            emissive={sub.tier >= 2}
           />
           <ProjectCard
-            position={p.rotation ? [0, 0, 0] : p.position}
-            title={p.title}
-            tier={p.tier}
+            position={sub.position}
+            title={sub.title}
+            tier={sub.tier}
           />
         </group>
       ))}
