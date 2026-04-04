@@ -24,7 +24,8 @@ interface ProjectConfig {
   title: string
   position: [number, number, number]
   tier: 1 | 2 | 3
-  transitionType: 'first' | 'dive' | 'sweep' | 'pullback'
+  transitionType: 'first' | 'dive' | 'sweep' | 'pullback' | 'ascend'
+  rotation?: [number, number, number]
 }
 
 // Tier 1: Z=-5 to -30  |  Tier 2: Z=-40 to -75  |  Tier 3: Z=-85 to -120
@@ -36,7 +37,7 @@ const PROJECTS: ProjectConfig[] = [
   { title: 'MVPcommunity',             position: [ 6, 40,    -60], tier: 2, transitionType: 'dive'    },
   { title: 'Baseaim.co Website',       position: [ 0, 47,    -75], tier: 2, transitionType: 'dive'     },
   { title: 'Airtable Clone',           position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback' },
-  { title: 'Baseaim Client Dashboard', position: [ 6, 73.5, -110], tier: 3, transitionType: 'dive'     },
+  { title: 'Baseaim Client Dashboard', position: [-7, 118, -90], tier: 3, transitionType: 'ascend', rotation: [0.35, 0, 0] },
 ]
 
 // Scenic apex platform — no project card
@@ -108,6 +109,13 @@ function buildCameraPath(projects: ProjectConfig[]): {
         proj.position,
       )
       push(cu, proj.position)
+    } else if (proj.transitionType === 'ascend') {
+      // Tilt gaze upward to reveal the island far above, then rise toward it
+      push(
+        new THREE.Vector3(prevCu.x, prevCu.y + 7, prevCu.z + 4),
+        proj.position,
+      )
+      push(cu, proj.position)
     }
   }
 
@@ -165,7 +173,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
 
       {/* Tier 3 lights — Z -90 to -120 */}
       <pointLight position={[-7, 64.5,  -88]} intensity={14} color="#f5e080" distance={65} decay={1.5} />
-      <pointLight position={[ 6, 73.5, -108]} intensity={6}  color="#daa520" distance={40} decay={2} />
+      <pointLight position={[-7, 116, -88]}  intensity={9}  color="#f5e080" distance={55} decay={1.5} />
       <pointLight position={[ 0, 80,   -118]} intensity={8}  color="#f0d060" distance={45} decay={2} />
 
       {/* Sparkles at each tier's depth midpoint */}
@@ -185,14 +193,24 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
 
       {/* Islands — auto-placed from PROJECTS data */}
       {PROJECTS.map((p) => (
-        <group key={p.title}>
+        <group
+          key={p.title}
+          position={p.rotation ? p.position : [0, 0, 0]}
+          rotation={p.rotation ?? [0, 0, 0]}
+        >
           <CloudPlatform
-            position={[p.position[0], p.position[1] - PLATFORM_Y_OFFSETS[p.tier], p.position[2]]}
+            position={p.rotation
+              ? [0, -PLATFORM_Y_OFFSETS[p.tier], 0]
+              : [p.position[0], p.position[1] - PLATFORM_Y_OFFSETS[p.tier], p.position[2]]}
             scale={PLATFORM_SCALES[p.tier]}
             emissive={p.tier >= 2}
             bright={p.tier === 3}
           />
-          <ProjectCard position={p.position} title={p.title} tier={p.tier} />
+          <ProjectCard
+            position={p.rotation ? [0, 0, 0] : p.position}
+            title={p.title}
+            tier={p.tier}
+          />
         </group>
       ))}
 
