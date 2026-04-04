@@ -21,26 +21,27 @@ function lookAtQuat(
   return new THREE.Quaternion().setFromRotationMatrix(m)
 }
 
-// 7 ascending control points that weave left↔right through each cloud tier
+// 7 control points that push deep into Z while weaving left↔right and rising in Y
+// Z travels from +6 (near) to -25 (deep) — 31 units of forward depth
 const CURVE_POINTS = [
-  new THREE.Vector3(0, -8, 9),       // entry: below all tiers, centred
-  new THREE.Vector3(-2, -1, 7),      // drift left past tier-1 left platform
-  new THREE.Vector3(2.5, 3, 6),      // cross right past tier-1 right platform
-  new THREE.Vector3(-1.5, 7, 5),     // sweep left toward tier-2 left
-  new THREE.Vector3(2, 11, 4),       // cross right through tier-2 zone
-  new THREE.Vector3(-1, 15.5, 3.2),  // arc left into tier-3 lower reach
-  new THREE.Vector3(0.5, 20, 2.5),   // final ascent to tier-3 apex
+  new THREE.Vector3(0, -8, 6),        // entry: below all tiers, near
+  new THREE.Vector3(-2, -1, 0),       // tier-1 left approach
+  new THREE.Vector3(4, 4, -6),        // swing right, tier-1 right area
+  new THREE.Vector3(-1, 8, -12),      // push deep left, rising
+  new THREE.Vector3(3.5, 11, -17),    // zoom deep right into tier-2
+  new THREE.Vector3(-1.5, 14, -21),   // sweep left + push deeper, tier-3 approach
+  new THREE.Vector3(0.5, 19, -25),    // final deep push toward apex
 ]
 
-// Per-keyframe rotations derived from real lookAt targets on each platform
+// Per-keyframe rotations: each looks toward the nearest island at that stage
 const Q_KEYFRAMES = [
-  lookAtQuat([0, -8, 9],       [0, 0, -2]),          // look up toward first clouds
-  lookAtQuat([-2, -1, 7],      [-3.5, -1, -3]),       // tier-1 left platform
-  lookAtQuat([2.5, 3, 6],      [-4.5, 7.5, -3.5]),    // look ahead-left at tier-2
-  lookAtQuat([-1.5, 7, 5],     [3.5, 9.5, -5]),       // tier-2 right platform
-  lookAtQuat([2, 11, 4],       [-5.5, 14.5, -4.5]),   // tier-3 left — dramatic sweep
-  lookAtQuat([-1, 15.5, 3.2],  [4.5, 16.5, -6]),      // tier-3 right platform
-  lookAtQuat([0.5, 20, 2.5],   [0, 19, -5.5]),        // settle on tier-3 apex
+  lookAtQuat([0, -8, 6],        [-3.5, -1, -4]),      // look toward tier-1 left island
+  lookAtQuat([-2, -1, 0],       [5, 1.5, -8]),        // look right at CYS island (far right)
+  lookAtQuat([4, 4, -6],        [0, 3.5, -13]),       // look forward-left at AI Website (deep)
+  lookAtQuat([-1, 8, -12],      [-6, 7.5, -16]),      // look left at RyderDigital (far left)
+  lookAtQuat([3.5, 11, -17],    [0, 11.5, -22]),      // look forward at Baseaim.co (very deep)
+  lookAtQuat([-1.5, 14, -21],   [-5.5, 14.5, -24]),   // look at Airtable Clone (far left deep)
+  lookAtQuat([0.5, 19, -25],    [0, 19, -29]),        // settle on tier-3 apex
 ]
 
 function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
@@ -51,7 +52,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
   const qEnd = useRef(new THREE.Quaternion())
 
   useEffect(() => {
-    const fog = new THREE.FogExp2(new THREE.Color('#1e1004'), 0.022)
+    const fog = new THREE.FogExp2(new THREE.Color('#1e1004'), 0.018)
     scene.fog = fog
     return () => { scene.fog = null }
   }, [scene])
@@ -77,37 +78,42 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
   return (
     <>
       <ambientLight intensity={0.25} color="#daa520" />
-      <pointLight position={[0, 20, 3]} intensity={4} color="#f5e080" distance={35} decay={1.5} />
-      <pointLight position={[-4, 9, 2]} intensity={2} color="#daa520" distance={22} decay={2} />
-      <pointLight position={[5, -1, 4]} intensity={1.2} color="#c8921a" distance={16} decay={2} />
-      <pointLight position={[3, 15, -2]} intensity={1.8} color="#f0d060" distance={18} decay={2} />
+      {/* Lights spread across the full Z depth of the scene */}
+      <pointLight position={[0, 22, -2]}  intensity={5}   color="#f5e080" distance={55} decay={1.5} />
+      <pointLight position={[-5, 5, -6]}  intensity={2.5} color="#daa520" distance={32} decay={2} />
+      <pointLight position={[6, 4, -10]}  intensity={1.8} color="#c8921a" distance={26} decay={2} />
+      <pointLight position={[-3, 13, -18]} intensity={2.5} color="#f0d060" distance={38} decay={1.8} />
+      <pointLight position={[3, 18, -26]} intensity={3}   color="#f5e080" distance={32} decay={1.8} />
 
-      <Sparkles count={250} scale={32} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
-      <Sparkles count={120} scale={22} size={5} speed={0.08} opacity={0.35} color="#daa520" />
-      <Sparkles count={60} scale={14} size={8} speed={0.04} opacity={0.25} color="#ffffff" />
+      {/* Sparkles recentered to cover the full depth of the scene */}
+      <group position={[0, 5, -12]}>
+        <Sparkles count={300} scale={[50, 50, 50]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
+        <Sparkles count={150} scale={[35, 35, 40]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
+        <Sparkles count={80}  scale={[22, 22, 30]} size={8}   speed={0.04} opacity={0.25} color="#ffffff" />
+      </group>
 
-      {/* Tier 1 */}
-      <CloudPlatform position={[-3.5, -1, -3]} scale={[4.5, 0.9, 3.5]} />
-      <CloudPlatform position={[2.5, 1.2, -4.5]} scale={[3.5, 0.7, 2.8]} />
-      <CloudPlatform position={[0, 3.5, -3.5]} scale={[5.5, 0.8, 4.2]} />
-      <ProjectCard position={[-3.5, 0.8, -3]} title="Spline Experiments" tier={1} />
-      <ProjectCard position={[2.5, 2.4, -4.5]} title="CYS Accountants" tier={1} />
-      <ProjectCard position={[0, 4.8, -3.5]} title="AI Website" tier={1} />
+      {/* Tier 1 — scattered across Z=-4 to Z=-13, with wide X spread */}
+      <CloudPlatform position={[-3.5, -1, -4]}  scale={[4.5, 0.9, 3.5]} />
+      <CloudPlatform position={[5, 1.5, -8]}    scale={[3.5, 0.7, 2.8]} />
+      <CloudPlatform position={[0, 3.5, -13]}   scale={[5.5, 0.8, 4.2]} />
+      <ProjectCard position={[-3.5, 0.8, -4]}   title="Spline Experiments" tier={1} />
+      <ProjectCard position={[5, 3.2, -8]}       title="CYS Accountants"   tier={1} />
+      <ProjectCard position={[0, 5.3, -13]}      title="AI Website"        tier={1} />
 
-      {/* Tier 2 */}
-      <CloudPlatform position={[-4.5, 7.5, -3.5]} scale={[6.5, 1.3, 5.5]} emissive />
-      <CloudPlatform position={[3.5, 9.5, -5]} scale={[5.5, 1.1, 4.5]} emissive />
-      <CloudPlatform position={[0, 11.5, -4]} scale={[8, 1.4, 6]} emissive />
-      <ProjectCard position={[-4.5, 9.2, -3.5]} title="RyderDigital" tier={2} />
-      <ProjectCard position={[3.5, 11.2, -5]} title="MVPcommunity" tier={2} />
-      <ProjectCard position={[0, 13.4, -4]} title="Baseaim.co Website" tier={2} />
+      {/* Tier 2 — deep and wide: Z=-16 to Z=-22, X pushed far out */}
+      <CloudPlatform position={[-6, 7.5, -16]}  scale={[6.5, 1.3, 5.5]} emissive />
+      <CloudPlatform position={[4.5, 9.5, -19]} scale={[5.5, 1.1, 4.5]} emissive />
+      <CloudPlatform position={[0, 11.5, -22]}  scale={[8, 1.4, 6]}     emissive />
+      <ProjectCard position={[-6, 9.3, -16]}    title="RyderDigital"        tier={2} />
+      <ProjectCard position={[4.5, 11.3, -19]}  title="MVPcommunity"        tier={2} />
+      <ProjectCard position={[0, 13.4, -22]}    title="Baseaim.co Website"  tier={2} />
 
-      {/* Tier 3 */}
-      <CloudPlatform position={[-5.5, 14.5, -4.5]} scale={[9, 2, 7.5]} emissive bright />
-      <CloudPlatform position={[4.5, 16.5, -6]} scale={[8, 1.8, 6.5]} emissive bright />
-      <CloudPlatform position={[0, 19, -5.5]} scale={[13, 2.5, 10]} emissive bright />
-      <ProjectCard position={[-5.5, 17, -4.5]} title="Airtable Clone" tier={3} />
-      <ProjectCard position={[4.5, 18.8, -6]} title="Baseaim Client Dashboard" tier={3} />
+      {/* Tier 3 — very far: Z=-24 to Z=-29, imposing and distant */}
+      <CloudPlatform position={[-5.5, 14.5, -24]} scale={[9, 2, 7.5]}   emissive bright />
+      <CloudPlatform position={[5.5, 16.5, -27]}  scale={[8, 1.8, 6.5]} emissive bright />
+      <CloudPlatform position={[0, 19, -29]}       scale={[13, 2.5, 10]} emissive bright />
+      <ProjectCard position={[-5.5, 17, -24]}      title="Airtable Clone"          tier={3} />
+      <ProjectCard position={[5.5, 18.8, -27]}     title="Baseaim Client Dashboard" tier={3} />
 
       <EffectComposer>
         <Bloom luminanceThreshold={0.28} luminanceSmoothing={0.85} intensity={1.4} mipmapBlur />
@@ -120,7 +126,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
 export default function CelestialScene({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   return (
     <Canvas
-      camera={{ position: [0, -8, 9], fov: 60, near: 0.1, far: 120 }}
+      camera={{ position: [0, -8, 6], fov: 60, near: 0.1, far: 130 }}
       dpr={[1, 1.5]}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
       style={{ background: '#0d0702' }}
