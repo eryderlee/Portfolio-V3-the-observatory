@@ -9,9 +9,11 @@ interface ThresholdPromptProps {
   heading: string
   description: string
   dimensionId: string
+  isActive: boolean
+  onEntered: () => void
 }
 
-export function ThresholdPrompt({ label, heading, description, dimensionId }: ThresholdPromptProps) {
+export function ThresholdPrompt({ label, heading, description, dimensionId, isActive, onEntered }: ThresholdPromptProps) {
   const [isOpen, setIsOpen] = useState(false)
   const triggerRef = useRef<HTMLDivElement>(null)
   const savedScrollY = useRef(0)
@@ -26,7 +28,7 @@ export function ThresholdPrompt({ label, heading, description, dimensionId }: Th
       trigger: el,
       start: 'top 80%',
       onEnter: () => {
-        if (hasEntered.current) return
+        if (hasEntered.current || !isActive) return
         savedScrollY.current = window.scrollY
         setIsOpen(true)
         lenis?.stop()
@@ -34,17 +36,19 @@ export function ThresholdPrompt({ label, heading, description, dimensionId }: Th
     })
 
     return () => st.kill()
-  }, [lenis])
+  }, [lenis, isActive])
 
   const handleEnter = useCallback(() => {
     hasEntered.current = true
     setIsOpen(false)
+    onEntered()
     lenis?.start()
     if (triggerRef.current) {
-      const target = triggerRef.current.offsetTop + triggerRef.current.offsetHeight
+      const rect = triggerRef.current.getBoundingClientRect()
+      const target = rect.bottom + window.scrollY
       lenis?.scrollTo(target, { duration: 1.2 } as Record<string, unknown>)
     }
-  }, [lenis])
+  }, [lenis, onEntered])
 
   const handleBack = useCallback(() => {
     setIsOpen(false)
