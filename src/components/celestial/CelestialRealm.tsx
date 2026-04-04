@@ -9,7 +9,8 @@ const CelestialScene = dynamic(() => import('./CelestialScene'), { ssr: false })
 const PLANE_THRESHOLDS = [0.37, 0.74]
 
 export function CelestialRealm() {
-  const sectionRef = useRef<HTMLDivElement>(null)
+  const sectionRef   = useRef<HTMLDivElement>(null)
+  const gateFlashRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [currentPlane, setCurrentPlane] = useState(1)
   const progressRef = useRef(0)
@@ -41,12 +42,28 @@ export function CelestialRealm() {
       const p = Math.max(0, Math.min(1, -rect.top / scrollable))
       progressRef.current = p
       setCurrentPlane(p < PLANE_THRESHOLDS[0] ? 1 : p < PLANE_THRESHOLDS[1] ? 2 : 3)
+
+      // Gate flash overlay — peaks as gates fully open (p=0.12), gone by p=0.20
+      if (gateFlashRef.current) {
+        const gp = Math.min(1, p / 0.12)
+        const fade = p > 0.12 ? Math.max(0, 1 - (p - 0.12) / 0.08) : 1
+        gateFlashRef.current.style.opacity = String(gp * fade * 0.38)
+      }
     }
 
     update()
     window.addEventListener('scroll', update, { passive: true })
     return () => window.removeEventListener('scroll', update)
   }, [])
+
+  const jumpToPlane = (plane: 1 | 2 | 3) => {
+    const el = sectionRef.current
+    if (!el) return
+    const sectionTop = el.getBoundingClientRect().top + window.scrollY
+    const scrollable = el.offsetHeight - window.innerHeight
+    const progress = plane === 1 ? 0 : plane === 2 ? PLANE_THRESHOLDS[0] : PLANE_THRESHOLDS[1]
+    window.scrollTo({ top: sectionTop + progress * scrollable, behavior: 'smooth' })
+  }
 
   return (
     <div ref={sectionRef} style={{ position: 'relative', height: '1000vh' }}>
@@ -73,6 +90,22 @@ export function CelestialRealm() {
             }}
           />
         )}
+
+        {/* Gate light-flood overlay — driven by scroll, no React re-renders */}
+        <div
+          ref={gateFlashRef}
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background:
+              'radial-gradient(ellipse 80% 55% at 50% 50%, rgba(245,224,128,0.9) 0%, rgba(218,165,32,0.4) 45%, transparent 72%)',
+            opacity: 0,
+            zIndex: 4,
+            mixBlendMode: 'screen',
+          }}
+        />
 
         {/* Heading overlay */}
         <div
@@ -119,7 +152,7 @@ export function CelestialRealm() {
           </h2>
         </div>
 
-        {/* Side plane indicator */}
+        {/* Side plane indicator — dots are clickable, jump to tier */}
         {isVisible && (
           <div
             style={{
@@ -132,7 +165,6 @@ export function CelestialRealm() {
               alignItems: 'center',
               gap: '20px',
               zIndex: 50,
-              pointerEvents: 'none',
             }}
           >
             {([3, 2, 1] as const).map((plane) => {
@@ -140,7 +172,8 @@ export function CelestialRealm() {
               return (
                 <div
                   key={plane}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}
+                  onClick={() => jumpToPlane(plane)}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
                 >
                   <div
                     style={{

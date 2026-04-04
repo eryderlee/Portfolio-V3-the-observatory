@@ -7,6 +7,7 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { CloudPlatform } from './CloudPlatform'
 import { ProjectCard } from './ProjectCard'
+import { CelestialGate } from './CelestialGate'
 
 function lookAtQuat(
   from: [number, number, number],
@@ -257,6 +258,9 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
           />
         </group>
       ))}
+
+      {/* Gate entrance — visible only during the first ~12-19% of scroll */}
+      <CelestialGate progressRef={progressRef} />
 
       <EffectComposer>
         <Bloom luminanceThreshold={0.28} luminanceSmoothing={0.85} intensity={1.4} mipmapBlur />
