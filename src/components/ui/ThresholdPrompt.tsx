@@ -9,11 +9,9 @@ interface ThresholdPromptProps {
   heading: string
   description: string
   dimensionId: string
-  isActive: boolean
-  onEntered: () => void
 }
 
-export function ThresholdPrompt({ label, heading, description, dimensionId, isActive, onEntered }: ThresholdPromptProps) {
+export function ThresholdPrompt({ label, heading, description, dimensionId }: ThresholdPromptProps) {
   const [isOpen, setIsOpen] = useState(false)
   const triggerRef = useRef<HTMLDivElement>(null)
   const savedScrollY = useRef(0)
@@ -28,7 +26,7 @@ export function ThresholdPrompt({ label, heading, description, dimensionId, isAc
       trigger: el,
       start: 'top 80%',
       onEnter: () => {
-        if (hasEntered.current || !isActive) return
+        if (hasEntered.current) return
         savedScrollY.current = window.scrollY
         setIsOpen(true)
         lenis?.stop()
@@ -36,37 +34,34 @@ export function ThresholdPrompt({ label, heading, description, dimensionId, isAc
     })
 
     return () => st.kill()
-  }, [lenis, isActive])
+  }, [lenis])
 
   const handleEnter = useCallback(() => {
     hasEntered.current = true
     setIsOpen(false)
-    onEntered()
     lenis?.start()
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
       const target = rect.bottom + window.scrollY
       lenis?.scrollTo(target, { duration: 1.2 } as Record<string, unknown>)
     }
-  }, [lenis, onEntered])
+  }, [lenis])
 
   const handleBack = useCallback(() => {
     setIsOpen(false)
     lenis?.start()
-    // Scroll back before the trigger point so the section exits the viewport
     const target = Math.max(0, savedScrollY.current - window.innerHeight * 0.5)
     lenis?.scrollTo(target, { duration: 0.9 } as Record<string, unknown>)
   }, [lenis])
 
   return (
     <>
-      {/* Trigger sentinel — occupies full section height so scroll distance is preserved */}
+      {/* Trigger sentinel */}
       <div
         ref={triggerRef}
         className="relative flex flex-col items-center justify-center w-full min-h-screen px-8 py-24 text-center"
         aria-hidden="true"
       >
-        {/* Ghost text — visible through the overlay as subtle texture */}
         <p
           className="text-xs tracking-[0.65em] uppercase select-none pointer-events-none"
           style={{
@@ -79,7 +74,7 @@ export function ThresholdPrompt({ label, heading, description, dimensionId, isAc
         </p>
       </div>
 
-      {/* Scroll-blocking overlay — fixed, covers full viewport */}
+      {/* Scroll-blocking overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center"
@@ -116,7 +111,6 @@ export function ThresholdPrompt({ label, heading, description, dimensionId, isAc
             className="relative z-10 flex flex-col items-center justify-center gap-7 text-center px-8 max-w-2xl w-full"
             style={{ animation: 'threshold-content-in 0.5s ease-out 0.1s both' }}
           >
-            {/* Label */}
             <p
               className="text-xs tracking-[0.65em] uppercase"
               style={{
@@ -128,14 +122,12 @@ export function ThresholdPrompt({ label, heading, description, dimensionId, isAc
               {label}
             </p>
 
-            {/* Accent line */}
             <div
               className="w-12 h-px"
               style={{ background: 'var(--dim-accent)', opacity: 0.35 }}
               aria-hidden="true"
             />
 
-            {/* Main heading */}
             <h2
               className="text-4xl md:text-6xl font-light leading-tight text-center"
               style={{
@@ -148,7 +140,6 @@ export function ThresholdPrompt({ label, heading, description, dimensionId, isAc
               {heading}
             </h2>
 
-            {/* Description */}
             <p
               className="text-xs tracking-[0.3em] uppercase text-center"
               style={{
@@ -160,7 +151,6 @@ export function ThresholdPrompt({ label, heading, description, dimensionId, isAc
               {description}
             </p>
 
-            {/* Buttons */}
             <div className="flex items-center gap-8 mt-3">
               <button
                 onClick={handleBack}

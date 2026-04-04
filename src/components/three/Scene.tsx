@@ -3,23 +3,8 @@
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ParticleField } from './ParticleField'
-import { useSceneContext } from '@/components/providers/SceneContext'
-import { CelestialScene } from '@/components/celestial/CelestialScene'
-
-// Context is read here, outside the R3F Canvas, to avoid reconciler boundary issues
-function SceneContent({ activeSection, celestialProgress }: { activeSection: string; celestialProgress: number }) {
-  return (
-    <Suspense fallback={null}>
-      {activeSection === 'celestial'
-        ? <CelestialScene celestialProgress={celestialProgress} />
-        : <ParticleField />}
-    </Suspense>
-  )
-}
 
 export default function Scene() {
-  const { activeSection, celestialProgress } = useSceneContext()
-
   return (
     <div
       style={{
@@ -39,7 +24,9 @@ export default function Scene() {
           powerPreference: 'high-performance',
         }}
       >
-        <SceneContent activeSection={activeSection} celestialProgress={celestialProgress} />
+        <Suspense fallback={null}>
+          <ParticleField />
+        </Suspense>
       </Canvas>
     </div>
   )
