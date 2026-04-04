@@ -49,7 +49,7 @@ export function CelestialRealm() {
   }, [])
 
   return (
-    <div ref={sectionRef} style={{ position: 'relative', height: '400vh' }}>
+    <div ref={sectionRef} style={{ position: 'relative', height: '600vh' }}>
       {/* Sticky viewport — canvas + overlay both live here, scroll through the 400vh outer div */}
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
 

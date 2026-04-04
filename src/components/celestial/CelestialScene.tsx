@@ -8,23 +8,39 @@ import * as THREE from 'three'
 import { CloudPlatform } from './CloudPlatform'
 import { ProjectCard } from './ProjectCard'
 
-// Camera fly-through path
+// Compute a lookAt quaternion at module init time (no runtime cost)
+function lookAtQuat(
+  from: [number, number, number],
+  to: [number, number, number],
+): THREE.Quaternion {
+  const m = new THREE.Matrix4().lookAt(
+    new THREE.Vector3(from[0], from[1], from[2]),
+    new THREE.Vector3(to[0], to[1], to[2]),
+    new THREE.Vector3(0, 1, 0),
+  )
+  return new THREE.Quaternion().setFromRotationMatrix(m)
+}
+
+// 7 ascending control points that weave left↔right through each cloud tier
 const CURVE_POINTS = [
-  new THREE.Vector3(0, -8, 9),
-  new THREE.Vector3(-1.5, -2, 7),
-  new THREE.Vector3(1, 4, 5.5),
-  new THREE.Vector3(-1, 10, 4.5),
-  new THREE.Vector3(0.5, 14, 3.5),
-  new THREE.Vector3(0, 19, 2.5),
+  new THREE.Vector3(0, -8, 9),       // entry: below all tiers, centred
+  new THREE.Vector3(-2, -1, 7),      // drift left past tier-1 left platform
+  new THREE.Vector3(2.5, 3, 6),      // cross right past tier-1 right platform
+  new THREE.Vector3(-1.5, 7, 5),     // sweep left toward tier-2 left
+  new THREE.Vector3(2, 11, 4),       // cross right through tier-2 zone
+  new THREE.Vector3(-1, 15.5, 3.2),  // arc left into tier-3 lower reach
+  new THREE.Vector3(0.5, 20, 2.5),   // final ascent to tier-3 apex
 ]
 
+// Per-keyframe rotations derived from real lookAt targets on each platform
 const Q_KEYFRAMES = [
-  new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.15, 0, 0)),
-  new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.2, -0.1, 0)),
-  new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.25, 0.08, 0)),
-  new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.3, -0.05, 0)),
-  new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.2, 0.05, 0)),
-  new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.1, 0, 0)),
+  lookAtQuat([0, -8, 9],       [0, 0, -2]),          // look up toward first clouds
+  lookAtQuat([-2, -1, 7],      [-3.5, -1, -3]),       // tier-1 left platform
+  lookAtQuat([2.5, 3, 6],      [-4.5, 7.5, -3.5]),    // look ahead-left at tier-2
+  lookAtQuat([-1.5, 7, 5],     [3.5, 9.5, -5]),       // tier-2 right platform
+  lookAtQuat([2, 11, 4],       [-5.5, 14.5, -4.5]),   // tier-3 left — dramatic sweep
+  lookAtQuat([-1, 15.5, 3.2],  [4.5, 16.5, -6]),      // tier-3 right platform
+  lookAtQuat([0.5, 20, 2.5],   [0, 19, -5.5]),        // settle on tier-3 apex
 ]
 
 function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
@@ -42,12 +58,15 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
 
   useFrame(() => {
     const target = progressRef.current
+    // Smooth damping via lerp
     smoothProgress.current += (target - smoothProgress.current) * 0.06
     const t = Math.max(0, Math.min(1, smoothProgress.current))
 
+    // Drive camera position along CatmullRom curve
     const pos = curve.getPoint(t)
     camera.position.copy(pos)
 
+    // Smooth rotation via Quaternion.slerp between lookAt keyframes
     const segment = t * (Q_KEYFRAMES.length - 1)
     const segIdx = Math.min(Math.floor(segment), Q_KEYFRAMES.length - 2)
     const segT = segment - Math.floor(segment)
