@@ -35,6 +35,7 @@ interface ClusterSubConfig {
   position: [number, number, number]
   scale: [number, number, number]
   tier: 1 | 2 | 3
+  minimal?: boolean
 }
 
 // Tier 1: Z=-5 to -30  |  Tier 2: Z=-40 to -75  |  Tier 3: Z=-85 to -120
@@ -50,15 +51,21 @@ const PROJECTS: ProjectConfig[] = [
 ]
 
 // Baseaim archipelago — sub-islands rendered around the main Baseaim cluster stop
+// PLANE 2 (tier 2) — upper/behind the main island
+// PLANE 1 (tier 1) — lower/in-front, including the Funnels pipeline cluster
 const BASEAIM_SUBS: ClusterSubConfig[] = [
-  { title: 'Baseaim Client Dashboard',   position: [-7, 49, -83], scale: [6.5, 1.3, 5.5], tier: 2 },
-  { title: 'Baseaim Landing Page + VSL', position: [ 8, 46, -81], scale: [5.8, 1.2, 5.0], tier: 2 },
-  { title: 'Baseaim.co Website',         position: [-8, 44, -69], scale: [4.8, 1.0, 4.0], tier: 1 },
-  { title: 'Baseaim Onboarding',         position: [ 9, 43, -68], scale: [3.5, 0.8, 3.0], tier: 1 },
+  // — PLANE 2 —
+  { title: 'Baseaim.co Website',         position: [-8, 50, -81], scale: [4.8, 1.0, 4.0], tier: 2 },
+  { title: 'Baseaim Auditor Software',   position: [ 7, 51, -83], scale: [5.5, 1.1, 4.5], tier: 2 },
+  // — PLANE 1 —
+  { title: 'Baseaim Client Dashboard',   position: [-7, 44, -70], scale: [4.5, 0.9, 3.5], tier: 1 },
+  { title: 'Baseaim Funnels',           position: [ 6, 45, -73], scale: [5.5, 1.1, 4.5], tier: 1 },
+  // Funnel pipeline — minimal text labels, cascading arc off the Funnels island
+  { title: 'AB Tested VSLs',            position: [10, 44.5, -70], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Preframe',                  position: [12, 44,   -72], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Thank You',                 position: [12, 43.5, -74], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Onboarding',               position: [10, 43,   -76], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
 ]
-
-// Scenic apex platform — no project card
-const APEX: [number, number, number] = [0, 80, -120]
 
 const PLATFORM_SCALES: Record<1 | 2 | 3, [number, number, number]> = {
   1: [4.5, 0.9, 3.5],
@@ -127,9 +134,9 @@ function buildCameraPath(projects: ProjectConfig[]): {
       )
       push(cu, proj.position)
     } else if (proj.transitionType === 'ascend') {
-      // Rise straight up — intermediate directly below the final island, same X/Z
+      // Rise straight up — intermediate at same X/Z as final island, pure Y movement
       push(
-        new THREE.Vector3(proj.position[0], prevCu.y + 7, proj.position[2] + 3),
+        new THREE.Vector3(proj.position[0], prevCu.y + 5, proj.position[2] + 3),
         proj.position,
       )
       push(cu, proj.position)
@@ -250,12 +257,10 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
             position={sub.position}
             title={sub.title}
             tier={sub.tier}
+            minimal={sub.minimal}
           />
         </group>
       ))}
-
-      {/* Apex platform — scenic finale, no card */}
-      <CloudPlatform position={APEX} scale={[13, 2.5, 10]} emissive bright />
 
       <EffectComposer>
         <Bloom luminanceThreshold={0.28} luminanceSmoothing={0.85} intensity={1.4} mipmapBlur />

@@ -7,6 +7,7 @@ interface ProjectCardProps {
   title: string
   tier: 1 | 2 | 3
   description?: string
+  minimal?: boolean
 }
 
 const TIER_STYLES = {
@@ -30,8 +31,32 @@ const TIER_STYLES = {
   },
 }
 
-export function ProjectCard({ position, title, tier, description }: ProjectCardProps) {
+export function ProjectCard({ position, title, tier, description, minimal }: ProjectCardProps) {
   const s = TIER_STYLES[tier]
+
+  if (minimal) {
+    return (
+      <Html position={position} center distanceFactor={10} zIndexRange={[10, 20]}>
+        <div
+          style={{
+            fontSize: '9px',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: s.label,
+            fontFamily: 'var(--font-playfair)',
+            fontStyle: 'italic',
+            textAlign: 'center',
+            whiteSpace: 'nowrap',
+            textShadow: `0 0 10px ${s.border}`,
+            userSelect: 'none',
+            opacity: 0.85,
+          }}
+        >
+          {title}
+        </div>
+      </Html>
+    )
+  }
 
   return (
     <Html position={position} center distanceFactor={10} zIndexRange={[10, 20]}>
