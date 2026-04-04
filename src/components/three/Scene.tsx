@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ParticleField } from './ParticleField'
 
+// Fixed background canvas — always renders the Observatory particle field
 export default function Scene() {
   return (
     <div

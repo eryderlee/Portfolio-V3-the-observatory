@@ -2,69 +2,64 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { ScrollTrigger } from '@/lib/gsap'
+
+// Canvas + R3F scene — no SSR (WebGL requires browser)
+const CelestialScene = dynamic(() => import('./CelestialScene'), { ssr: false })
 
 const PLANE_THRESHOLDS = [0.32, 0.66]
 
-const CelestialCanvas = dynamic(() => import('./CelestialCanvas'), {
-  ssr: false,
-  loading: () => null,
-})
-
 export function CelestialRealm() {
   const sectionRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
   const [currentPlane, setCurrentPlane] = useState(1)
-  const [entered, setEntered] = useState(false)
-  const [celestialProgress, setCelestialProgress] = useState(0)
+  const progressRef = useRef(0)
 
+  // Mount/unmount canvas when section enters/leaves viewport
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  // Scroll progress 0→1 through this section, drives camera path
   useEffect(() => {
     const el = sectionRef.current
     if (!el) return
 
-    const stVisibility = ScrollTrigger.create({
-      trigger: el,
-      start: 'top bottom',
-      end: 'bottom top',
-      onEnter: () => setEntered(true),
-    })
-
-    const stScrub = ScrollTrigger.create({
-      trigger: el,
-      start: 'top bottom',
-      end: 'bottom top',
-      scrub: 0.4,
-      onUpdate: (self) => {
-        const p = self.progress
-        setCelestialProgress(p)
-        setCurrentPlane(p < PLANE_THRESHOLDS[0] ? 1 : p < PLANE_THRESHOLDS[1] ? 2 : 3)
-      },
-    })
-
-    return () => {
-      stVisibility.kill()
-      stScrub.kill()
+    const update = () => {
+      const rect = el.getBoundingClientRect()
+      const scrollable = el.offsetHeight - window.innerHeight
+      if (scrollable <= 0) {
+        progressRef.current = 0
+        return
+      }
+      const p = Math.max(0, Math.min(1, -rect.top / scrollable))
+      progressRef.current = p
+      setCurrentPlane(p < PLANE_THRESHOLDS[0] ? 1 : p < PLANE_THRESHOLDS[1] ? 2 : 3)
     }
+
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
   }, [])
 
   return (
     <div ref={sectionRef} style={{ position: 'relative', height: '400vh' }}>
-      {/* Sticky viewport panel — canvas + all overlays scroll together */}
-      <div style={{ position: 'sticky', top: 0, height: '100vh' }}>
+      {/* Sticky viewport — canvas + overlay both live here, scroll through the 400vh outer div */}
+      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
 
-        {/* 3D Canvas backdrop */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: '#1e1004',
-          }}
-        >
-          <CelestialCanvas celestialProgress={celestialProgress} />
+        {/* 3D Canvas — only mounted when section is on screen */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+          {isVisible && <CelestialScene progressRef={progressRef} />}
         </div>
 
-        {/* Golden entrance bloom overlay — plays once on first enter */}
-        {entered && (
+        {/* Golden entrance bloom — CSS only, plays once when section mounts */}
+        {isVisible && (
           <div
             aria-hidden="true"
             style={{
@@ -72,14 +67,14 @@ export function CelestialRealm() {
               inset: 0,
               pointerEvents: 'none',
               background:
-                'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(218,165,32,0.18) 0%, transparent 70%)',
+                'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(218,165,32,0.14) 0%, transparent 70%)',
               animation: 'celestial-bloom-in 1.6s ease-out both',
               zIndex: 5,
             }}
           />
         )}
 
-        {/* Sticky section heading */}
+        {/* Heading overlay */}
         <div
           style={{
             position: 'absolute',
@@ -89,7 +84,7 @@ export function CelestialRealm() {
             padding: '0 6vw',
             pointerEvents: 'none',
             zIndex: 20,
-            opacity: entered ? 1 : 0,
+            opacity: isVisible ? 1 : 0,
             transition: 'opacity 0.9s',
           }}
         >
@@ -124,8 +119,8 @@ export function CelestialRealm() {
           </h2>
         </div>
 
-        {/* Side navigation — plane indicator */}
-        {entered && (
+        {/* Side plane indicator */}
+        {isVisible && (
           <div
             style={{
               position: 'absolute',
@@ -145,12 +140,7 @@ export function CelestialRealm() {
               return (
                 <div
                   key={plane}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '5px',
-                  }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}
                 >
                   <div
                     style={{
