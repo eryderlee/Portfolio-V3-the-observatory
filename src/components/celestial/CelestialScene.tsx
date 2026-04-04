@@ -40,9 +40,9 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
     return () => { scene.fog = null }
   }, [scene])
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const target = progressRef.current
-    smoothProgress.current += (target - smoothProgress.current) * 0.06
+    smoothProgress.current = THREE.MathUtils.damp(smoothProgress.current, target, 4, delta)
     const t = Math.max(0, Math.min(1, smoothProgress.current))
 
     const pos = curve.getPoint(t)
