@@ -1,0 +1,16 @@
+{"timestamp":"00:08:37.009","source":"Server","level":"ERROR","message":"⨯ Error: ENOENT: no such file or directory, open 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\.next\\dev\\server\\app\\_not-found\\page\\build-manifest.json'"}
+{"timestamp":"00:08:37.204","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:37.207","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:37.210","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:38.837","source":"Server","level":"LOG","message":"✓ Compiled in 1960ms"}
+{"timestamp":"00:08:40.208","source":"Server","level":"LOG","message":"○ Compiling /_error ..."}
+{"timestamp":"00:08:40.653","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, open 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\.next\\dev\\static\\development\\_buildManifest.js.tmp.7qhaguj0xh'"}
+{"timestamp":"00:08:40.655","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:40.662","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:40.664","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:40.672","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:40.673","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:40.678","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:40.680","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:40.688","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}
+{"timestamp":"00:08:40.690","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'E:\\websites\\the-observatory\\.claude\\worktrees\\sharp-galileo\\src\\app'"}

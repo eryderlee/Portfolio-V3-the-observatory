@@ -31,9 +31,9 @@ interface ProjectConfig {
 const PROJECTS: ProjectConfig[] = [
   { title: 'Spline Experiments',       position: [-4,  0.8,  -10], tier: 1, transitionType: 'first'    },
   { title: 'CYS Accountants',          position: [ 5,  5.8,  -20], tier: 1, transitionType: 'dive'     },
-  { title: 'AI Website',               position: [ 0, 12.8,  -30], tier: 1, transitionType: 'sweep'    },
+  { title: 'AI Website',               position: [ 0, 12.8,  -30], tier: 1, transitionType: 'dive'    },
   { title: 'RyderDigital',             position: [-7, 32,    -45], tier: 2, transitionType: 'pullback' },
-  { title: 'MVPcommunity',             position: [ 6, 40,    -60], tier: 2, transitionType: 'sweep'    },
+  { title: 'MVPcommunity',             position: [ 6, 40,    -60], tier: 2, transitionType: 'dive'    },
   { title: 'Baseaim.co Website',       position: [ 0, 47,    -75], tier: 2, transitionType: 'dive'     },
   { title: 'Airtable Clone',           position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback' },
   { title: 'Baseaim Client Dashboard', position: [ 6, 73.5, -110], tier: 3, transitionType: 'dive'     },
