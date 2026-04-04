@@ -13,6 +13,7 @@ export function CelestialRealm() {
   const gateFlashRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [currentPlane, setCurrentPlane] = useState(1)
+  const [hoveredPlane, setHoveredPlane] = useState<1 | 2 | 3 | null>(null)
   const progressRef = useRef(0)
 
   // Mount/unmount canvas when section enters/leaves viewport
@@ -152,7 +153,7 @@ export function CelestialRealm() {
           </h2>
         </div>
 
-        {/* Side plane indicator — dots are clickable, jump to tier */}
+        {/* Side plane indicator — diamond-framed numbers, clickable to jump to tier */}
         {isVisible && (
           <div
             style={{
@@ -163,40 +164,69 @@ export function CelestialRealm() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '20px',
+              gap: '16px',
               zIndex: 50,
             }}
           >
             {([3, 2, 1] as const).map((plane) => {
               const active = currentPlane === plane
+              const hovered = hoveredPlane === plane
               return (
                 <div
                   key={plane}
                   onClick={() => jumpToPlane(plane)}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
+                  onMouseEnter={() => setHoveredPlane(plane)}
+                  onMouseLeave={() => setHoveredPlane(null)}
+                  style={{ cursor: 'pointer', padding: '6px' }}
                 >
+                  {/* Outer diamond */}
                   <div
                     style={{
-                      width: active ? '11px' : '7px',
-                      height: active ? '11px' : '7px',
-                      borderRadius: '50%',
-                      background: active ? '#daa520' : 'rgba(218,165,32,0.25)',
-                      border: `1px solid ${active ? '#f5e080' : 'rgba(218,165,32,0.18)'}`,
-                      boxShadow: active ? '0 0 10px rgba(218,165,32,0.9)' : 'none',
+                      width: '34px',
+                      height: '34px',
+                      transform: 'rotate(45deg)',
+                      border: `1px solid ${active ? '#daa520' : hovered ? 'rgba(218,165,32,0.55)' : 'rgba(218,165,32,0.22)'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: active
+                        ? '0 0 16px rgba(218,165,32,0.85), inset 0 0 8px rgba(218,165,32,0.18)'
+                        : hovered ? '0 0 8px rgba(218,165,32,0.4)' : 'none',
+                      background: active ? 'rgba(218,165,32,0.07)' : 'transparent',
                       transition: 'all 0.35s ease',
                     }}
-                  />
-                  <span
-                    style={{
-                      fontSize: '8px',
-                      letterSpacing: '0.15em',
-                      color: active ? '#daa520' : 'rgba(218,165,32,0.28)',
-                      fontFamily: 'var(--font-playfair)',
-                      transition: 'color 0.35s ease',
-                    }}
                   >
-                    {plane}
-                  </span>
+                    {/* Inner diamond */}
+                    <div
+                      style={{
+                        width: '22px',
+                        height: '22px',
+                        border: `1px solid ${active ? 'rgba(218,165,32,0.5)' : hovered ? 'rgba(218,165,32,0.35)' : 'rgba(218,165,32,0.14)'}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'border-color 0.35s ease',
+                      }}
+                    >
+                      {/* Number — counter-rotated to stay upright */}
+                      <span
+                        style={{
+                          display: 'block',
+                          transform: 'rotate(-45deg)',
+                          fontSize: '12px',
+                          fontFamily: 'var(--font-playfair)',
+                          fontWeight: 400,
+                          color: active ? '#daa520' : hovered ? 'rgba(218,165,32,0.65)' : 'rgba(218,165,32,0.28)',
+                          lineHeight: 1,
+                          textShadow: active ? '0 0 10px rgba(218,165,32,0.9)' : 'none',
+                          transition: 'color 0.35s ease, text-shadow 0.35s ease',
+                          userSelect: 'none',
+                        }}
+                      >
+                        {plane}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )
             })}

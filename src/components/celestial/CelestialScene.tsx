@@ -24,6 +24,7 @@ function lookAtQuat(
 interface ProjectConfig {
   title: string
   description?: string
+  tech?: string[]
   position: [number, number, number]
   tier: 1 | 2 | 3
   transitionType: 'first' | 'dive' | 'sweep' | 'pullback' | 'ascend'
@@ -33,6 +34,8 @@ interface ProjectConfig {
 
 interface ClusterSubConfig {
   title: string
+  description?: string
+  tech?: string[]
   position: [number, number, number]
   scale: [number, number, number]
   tier: 1 | 2 | 3
@@ -41,14 +44,14 @@ interface ClusterSubConfig {
 
 // Tier 1: Z=-5 to -30  |  Tier 2: Z=-40 to -75  |  Tier 3: Z=-85 to -120
 const PROJECTS: ProjectConfig[] = [
-  { title: 'Spline Experiments',       position: [-4,  0.8,  -10], tier: 1, transitionType: 'first'    },
-  { title: 'CYS Accountants',          position: [ 5,  5.8,  -20], tier: 1, transitionType: 'dive'     },
-  { title: 'AI Website',               position: [ 0, 12.8,  -30], tier: 1, transitionType: 'dive'    },
-  { title: 'RyderDigital',             position: [-7, 32,    -45], tier: 2, transitionType: 'pullback' },
-  { title: 'MVPcommunity',             position: [ 6, 40,    -60], tier: 2, transitionType: 'dive'    },
-  { title: 'Baseaim',                  position: [ 0, 47,    -75], tier: 2, transitionType: 'dive'     },
-  { title: 'Airtable Clone',           position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback' },
-  { title: 'The Observatory',          position: [-7, 118,  -105], tier: 3, transitionType: 'ascend', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
+  { title: 'Spline Experiments',  position: [-4,  0.8,  -10], tier: 1, transitionType: 'first',   description: 'Interactive 3D web experiences built with Spline',              tech: ['Spline', 'React', 'Three.js'] },
+  { title: 'CYS Accountants',     position: [ 5,  5.8,  -20], tier: 1, transitionType: 'dive',    description: 'Professional accounting firm website with modern design',        tech: ['Next.js', 'Tailwind CSS'] },
+  { title: 'AI Website',          position: [ 0, 12.8,  -30], tier: 1, transitionType: 'dive',    description: 'AI-powered web application with intelligent features',            tech: ['Next.js', 'OpenAI API', 'React'] },
+  { title: 'RyderDigital',        position: [-7, 32,    -45], tier: 2, transitionType: 'pullback', description: 'Web design agency portfolio and services',                       tech: ['Next.js', 'GSAP', 'Tailwind CSS'] },
+  { title: 'MVPcommunity',        position: [ 6, 40,    -60], tier: 2, transitionType: 'dive',    description: 'Community platform connecting founders and builders',             tech: ['Next.js', 'Supabase', 'Real-time'] },
+  { title: 'Baseaim',             position: [ 0, 47,    -75], tier: 2, transitionType: 'dive',    description: 'Full-service digital agency specializing in web and growth',      tech: ['Next.js', 'React', 'Node.js'] },
+  { title: 'Airtable Clone',      position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback', description: 'Full-stack database application inspired by Airtable',           tech: ['Next.js', 'PostgreSQL', 'Real-time Sync'] },
+  { title: 'The Observatory',     position: [-7, 118,  -105], tier: 3, transitionType: 'ascend', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
 ]
 
 // Baseaim archipelago — sub-islands rendered around the main Baseaim cluster stop
@@ -56,15 +59,15 @@ const PROJECTS: ProjectConfig[] = [
 // PLANE 1 (tier 1) — lower/in-front, including the Funnels pipeline cluster
 const BASEAIM_SUBS: ClusterSubConfig[] = [
   // — PLANE 1 (all Baseaim sub-islands) —
-  { title: 'Baseaim.co Website',         position: [-8, 42,   -66], scale: [4.8, 1.0, 4.0], tier: 1 },
-  { title: 'Baseaim Auditor Software',   position: [ 7, 42.5, -68], scale: [5.5, 1.1, 4.5], tier: 1 },
-  { title: 'Baseaim Client Dashboard',   position: [-7, 44,   -70], scale: [4.5, 0.9, 3.5], tier: 1 },
-  { title: 'Baseaim Funnels',           position: [ 6, 45,   -73], scale: [5.5, 1.1, 4.5], tier: 1 },
+  { title: 'Baseaim.co Website',       position: [-8, 42,   -66], scale: [4.8, 1.0, 4.0], tier: 1, description: 'Agency website for Baseaim digital services',      tech: ['Next.js', 'Tailwind', 'Framer Motion'] },
+  { title: 'Baseaim Auditor Software', position: [ 7, 42.5, -68], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Automated website auditing software',               tech: ['Next.js', 'Puppeteer', 'AI Analysis'] },
+  { title: 'Baseaim Client Dashboard', position: [-7, 44,   -70], scale: [4.5, 0.9, 3.5], tier: 1, description: 'Client management dashboard for Baseaim agency',    tech: ['React', 'Node.js', 'Tailwind'] },
+  { title: 'Baseaim Funnels',         position: [ 6, 45,   -73], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Conversion-optimized sales funnel system',           tech: ['Next.js', 'Analytics', 'A/B Testing'] },
   // Funnel pipeline — minimal text labels, cascading arc off the Funnels island
-  { title: 'AB Tested VSLs',            position: [10, 44.5, -70], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Preframe',                  position: [12, 44,   -72], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Thank You',                 position: [12, 43.5, -74], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Onboarding',               position: [10, 43,   -76], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'AB Tested VSLs',          position: [10, 44.5, -70], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Preframe',                position: [12, 44,   -72], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Thank You',               position: [12, 43.5, -74], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Onboarding',             position: [10, 43,   -76], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
 ]
 
 const PLATFORM_SCALES: Record<1 | 2 | 3, [number, number, number]> = {
@@ -237,6 +240,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
               title={p.title}
               tier={p.tier}
               description={p.description}
+              tech={p.tech}
             />
           </group>
         )
@@ -254,6 +258,8 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
             position={sub.position}
             title={sub.title}
             tier={sub.tier}
+            description={sub.description}
+            tech={sub.tech}
             minimal={sub.minimal}
           />
         </group>

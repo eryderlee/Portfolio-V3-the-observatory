@@ -7,6 +7,7 @@ interface ProjectCardProps {
   title: string
   tier: 1 | 2 | 3
   description?: string
+  tech?: string[]
   minimal?: boolean
 }
 
@@ -31,7 +32,7 @@ const TIER_STYLES = {
   },
 }
 
-export function ProjectCard({ position, title, tier, description, minimal }: ProjectCardProps) {
+export function ProjectCard({ position, title, tier, description, tech, minimal }: ProjectCardProps) {
   const s = TIER_STYLES[tier]
 
   if (minimal) {
@@ -68,10 +69,11 @@ export function ProjectCard({ position, title, tier, description, minimal }: Pro
           boxShadow: `0 0 24px ${s.glow}, inset 0 0 12px ${s.glow}`,
           backdropFilter: 'blur(10px)',
           minWidth: '170px',
+          maxWidth: '220px',
           textAlign: 'center',
           cursor: 'pointer',
           userSelect: 'none',
-          whiteSpace: 'nowrap',
+          whiteSpace: 'normal',
         }}
       >
         <div
@@ -82,6 +84,7 @@ export function ProjectCard({ position, title, tier, description, minimal }: Pro
             color: s.label,
             fontFamily: 'var(--font-playfair)',
             marginBottom: '8px',
+            whiteSpace: 'nowrap',
           }}
         >
           Plane {tier}
@@ -93,6 +96,7 @@ export function ProjectCard({ position, title, tier, description, minimal }: Pro
             color: s.text,
             fontFamily: 'var(--font-playfair)',
             fontStyle: 'italic',
+            fontWeight: 700,
             lineHeight: 1.3,
           }}
         >
@@ -109,11 +113,39 @@ export function ProjectCard({ position, title, tier, description, minimal }: Pro
               fontStyle: 'italic',
               opacity: 0.75,
               lineHeight: 1.4,
-              maxWidth: '200px',
-              whiteSpace: 'normal',
             }}
           >
             {description}
+          </div>
+        )}
+
+        {tech && tech.length > 0 && (
+          <div
+            style={{
+              marginTop: '10px',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '4px',
+              justifyContent: 'center',
+            }}
+          >
+            {tech.map((t) => (
+              <span
+                key={t}
+                style={{
+                  fontSize: '8px',
+                  letterSpacing: '0.08em',
+                  color: s.label,
+                  border: `1px solid ${s.border}`,
+                  padding: '2px 6px',
+                  opacity: 0.85,
+                  fontFamily: 'var(--font-playfair)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t}
+              </span>
+            ))}
           </div>
         )}
 
@@ -124,6 +156,7 @@ export function ProjectCard({ position, title, tier, description, minimal }: Pro
             letterSpacing: '0.25em',
             color: s.label,
             textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
           }}
         >
           View Project →
