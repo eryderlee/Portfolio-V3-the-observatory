@@ -23,6 +23,7 @@ export default function Scene() {
           antialias: false,
           alpha: true,
           powerPreference: 'high-performance',
+          preserveDrawingBuffer: true,
         }}
       >
         <Suspense fallback={null}>
