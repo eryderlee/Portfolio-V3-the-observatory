@@ -280,7 +280,7 @@ export default function CelestialScene({ progressRef }: { progressRef: React.Mut
     <Canvas
       camera={{ position: [0, -13.2, 1], fov: 55, near: 0.1, far: 350 }}
       dpr={[1, 1.5]}
-      gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
+      gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       style={{ background: '#0d0702' }}
     >
       <Suspense fallback={null}>
