@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 // Canvas + R3F scene — no SSR (WebGL requires browser)
 const CelestialScene = dynamic(() => import('./CelestialScene'), { ssr: false })
 
-const PLANE_THRESHOLDS = [0.37, 0.74]
+const PLANE_THRESHOLDS = [0.33, 0.62]
 
 export function CelestialRealm() {
   const sectionRef   = useRef<HTMLDivElement>(null)
@@ -142,7 +142,7 @@ export function CelestialRealm() {
               fontWeight: 400,
               fontStyle: 'italic',
               color: '#f5f0e0',
-              textShadow: '0 0 60px rgba(218,165,32,0.45)',
+              textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 60px rgba(218,165,32,0.45)',
               lineHeight: 1.2,
               margin: 0,
             }}
