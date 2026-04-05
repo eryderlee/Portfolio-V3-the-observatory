@@ -158,7 +158,7 @@ export function CelestialRealm() {
           <div
             style={{
               position: 'absolute',
-              right: '3.5vw',
+              right: '1.5vw',
               top: '50%',
               transform: 'translateY(-50%)',
               display: 'flex',

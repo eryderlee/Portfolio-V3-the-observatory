@@ -5,19 +5,17 @@ import { useFrame } from '@react-three/fiber'
 import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 
-// Gate is positioned along the camera's entry line of sight:
-// Camera starts at [0, -13.2, 1] looking toward [-4, 0.8, -10].
-// Gate center at [0, -5, -5] falls roughly on that line, spanning
-// the full vertical range the camera sweeps through on entry.
+// Gate sits on the camera's flight path: camera starts far back at Z=12 looking
+// at the gate, gate opens fully by progress=0.06, camera flies through at ~0.13.
 const GATE_X = 0
 const GATE_Y = -5
-const GATE_Z = -5
-const PANEL_W = 7       // half-width — each panel is 7 units wide
-const PANEL_H = 20      // tall enough to fill view
-const PANEL_D = 0.35
+const GATE_Z = -6
+const PANEL_W = 11      // half-width — each panel 11 wide → 22 total, imposing from distance
+const PANEL_H = 32      // tall enough to dominate the view on entry
+const PANEL_D = 0.4
 
-const GATE_OPEN_AT = 0.18   // fully rotated open by 18% scroll progress
-const GATE_HIDE_AT = 0.25   // hidden entirely by 25% (panels folded back, no longer needed)
+const GATE_OPEN_AT = 0.06   // fully open by 6% — gate is wide open before camera arrives
+const GATE_HIDE_AT = 0.22   // hidden by 22% (camera well past it)
 
 export function CelestialGate({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   const outerRef   = useRef<THREE.Group>(null)
@@ -41,7 +39,7 @@ export function CelestialGate({ progressRef }: { progressRef: React.MutableRefOb
   })
 
   return (
-    <group ref={outerRef} position={[GATE_X, GATE_Y, GATE_Z]} rotation={[Math.PI * 0.3, 0, 0]}>
+    <group ref={outerRef} position={[GATE_X, GATE_Y, GATE_Z]}>
 
       {/* ── Left panel — hinge at x = -PANEL_W ── */}
       <group ref={leftRef} position={[-PANEL_W, 0, 0]}>
