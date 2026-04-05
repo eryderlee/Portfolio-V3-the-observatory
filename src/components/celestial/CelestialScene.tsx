@@ -102,17 +102,17 @@ function buildCameraPath(projects: ProjectConfig[]): {
     quats.push(lookAtQuat([v.x, v.y, v.z], lookAt))
   }
 
-  // Far-back start — camera is distant, gate is fully visible ahead
-  // Gate is at [0, -5, -6]; camera at [0, -2, 12] looks straight at it
-  push(new THREE.Vector3(0, -2, 12), [0, -5, -6])
+  // Gate approach — camera starts LOW looking UP at the gate high above.
+  // Gate is at [0, 15, -6]. Camera ascends like climbing heavenly stairs.
+  push(new THREE.Vector3(0, -5, 8),  [0, 15, -6])  // start: looking up at gate
+  push(new THREE.Vector3(0,  2, 4),  [0, 15, -6])  // rising, approaching
+  push(new THREE.Vector3(0,  8, 0),  [0, 15, -6])  // level with gate, about to pass through
 
-  // Entry swoop — below and in front of first island
   const first = projects[0]
-  push(
-    new THREE.Vector3(0, first.position[1] - 14, first.position[2] + 11),
-    first.position,
-  )
-  // First close-up (no transition in)
+  // Just past gate — transitioning toward first island
+  push(new THREE.Vector3(0, 10, -5), first.position)
+
+  // First close-up
   push(closeUpOf(first), first.position)
 
   for (let i = 1; i < projects.length; i++) {
@@ -282,7 +282,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
 export default function CelestialScene({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   return (
     <Canvas
-      camera={{ position: [0, -2, 12], fov: 55, near: 0.1, far: 350 }}
+      camera={{ position: [0, -5, 8], fov: 55, near: 0.1, far: 350 }}
       dpr={[1, 1.5]}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       style={{ background: '#1e1004' }}

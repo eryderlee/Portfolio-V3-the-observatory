@@ -37,7 +37,7 @@ export function ProjectCard({ position, title, tier, description, tech, minimal 
 
   if (minimal) {
     return (
-      <Html position={position} center distanceFactor={10} zIndexRange={[10, 20]}>
+      <Html position={position} center distanceFactor={10} zIndexRange={[100, 0]}>
         <div
           style={{
             fontSize: '9px',
@@ -60,7 +60,7 @@ export function ProjectCard({ position, title, tier, description, tech, minimal 
   }
 
   return (
-    <Html position={position} center distanceFactor={10} zIndexRange={[10, 20]}>
+    <Html position={position} center distanceFactor={10} zIndexRange={[100, 0]}>
       <div
         style={{
           padding: '14px 22px',
