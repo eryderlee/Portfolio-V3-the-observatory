@@ -5,13 +5,13 @@ import { useFrame } from '@react-three/fiber'
 import { RoundedBox } from '@react-three/drei'
 import * as THREE from 'three'
 
-// Gate sits HIGH in the scene — camera starts low at [0, -5, 8] looking UP at the gate.
+// Gate sits HIGH in the scene — camera starts far back at [0, -5, 28] looking UP at the gate.
 // As the player scrolls, the camera ASCENDS toward the gate (heavenly stairway effect).
 const GATE_X = 0
 const GATE_Y = 15
 const GATE_Z = -6
-const PANEL_W = 7.5     // each panel 7.5 wide → 15 total gate width
-const PANEL_H = 25      // imposing height
+const PANEL_W = 5.5     // each panel 5.5 wide → 11 total gate width
+const PANEL_H = 14      // small from far; grows dramatically as you approach
 const PANEL_D = 0.4
 
 // Gate opens slightly after scroll begins, fully open at 8%
@@ -127,21 +127,21 @@ export function CelestialGate({ progressRef }: { progressRef: React.MutableRefOb
       </RoundedBox>
 
       {/* Gate-level flanking clouds (beside the gate at Y ≈ 15) */}
-      <RoundedBox args={[7, 2.5, 5]} position={[-15, 15, -6]} radius={0.85} smoothness={4}>
+      <RoundedBox args={[7, 2.5, 5]} position={[-12, 15, -6]} radius={0.85} smoothness={4}>
         <meshStandardMaterial color="#f0ead8" emissive="#daa520" emissiveIntensity={0.25} roughness={0.8} metalness={0.08} />
       </RoundedBox>
-      <RoundedBox args={[7, 2.5, 5]} position={[15, 15, -6]} radius={0.85} smoothness={4}>
+      <RoundedBox args={[7, 2.5, 5]} position={[12, 15, -6]} radius={0.85} smoothness={4}>
         <meshStandardMaterial color="#f0ead8" emissive="#daa520" emissiveIntensity={0.25} roughness={0.8} metalness={0.08} />
       </RoundedBox>
 
       {/* Upper cloud canopy above the gate */}
-      <RoundedBox args={[11, 2, 6]} position={[0, 29, -7]} radius={0.95} smoothness={4}>
+      <RoundedBox args={[11, 2, 6]} position={[0, 24, -7]} radius={0.95} smoothness={4}>
         <meshStandardMaterial color="#f5f0e4" emissive="#f5e080" emissiveIntensity={0.2} roughness={0.8} metalness={0.05} />
       </RoundedBox>
-      <RoundedBox args={[5.5, 1.5, 4]} position={[-11, 26, -7]} radius={0.7} smoothness={4}>
+      <RoundedBox args={[5.5, 1.5, 4]} position={[-11, 21, -7]} radius={0.7} smoothness={4}>
         <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.18} roughness={0.82} metalness={0.05} />
       </RoundedBox>
-      <RoundedBox args={[5.5, 1.5, 4]} position={[11, 26, -7]} radius={0.7} smoothness={4}>
+      <RoundedBox args={[5.5, 1.5, 4]} position={[11, 21, -7]} radius={0.7} smoothness={4}>
         <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.18} roughness={0.82} metalness={0.05} />
       </RoundedBox>
 
@@ -150,7 +150,7 @@ export function CelestialGate({ progressRef }: { progressRef: React.MutableRefOb
       <pointLight position={[7,  0, 4]}  intensity={3} color="#f5e080" distance={14} decay={2} />
       <pointLight position={[0,  7, 0]}  intensity={5} color="#daa520" distance={22} decay={2} />
       <pointLight position={[0, 14, -5]} intensity={6} color="#f5e080" distance={25} decay={1.8} />
-      <pointLight position={[0, 27, -7]} intensity={4} color="#f5e080" distance={18} decay={2} />
+      <pointLight position={[0, 22, -7]} intensity={4} color="#f5e080" distance={18} decay={2} />
     </group>
   )
 }
