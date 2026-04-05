@@ -42,32 +42,33 @@ interface ClusterSubConfig {
   minimal?: boolean
 }
 
-// Tier 1: Z=-5 to -30  |  Tier 2: Z=-40 to -75  |  Tier 3: Z=-85 to -120
+// All islands at Y≈14-15 (gate level) — camera levels off at the gate then flies horizontally.
+// Observatory at Y=118 is the dramatic final ascent. Tier 1: Z=-14 to -42 | Tier 2: Z=-58 to -90 | Tier 3: Z=-110 to -128
 const PROJECTS: ProjectConfig[] = [
-  { title: 'Spline Experiments',  position: [-4,  0.8,  -10], tier: 1, transitionType: 'first',   description: 'Interactive 3D web experiences built with Spline',              tech: ['Spline', 'React', 'Three.js'] },
-  { title: 'CYS Accountants',     position: [ 5,  5.8,  -20], tier: 1, transitionType: 'dive',    description: 'Professional accounting firm website with modern design',        tech: ['Next.js', 'Tailwind CSS'] },
-  { title: 'AI Website',          position: [ 0, 12.8,  -30], tier: 1, transitionType: 'dive',    description: 'AI-powered web application with intelligent features',            tech: ['Next.js', 'OpenAI API', 'React'] },
-  { title: 'RyderDigital',        position: [-4, 32,    -45], tier: 2, transitionType: 'pullback', description: 'Web design agency portfolio and services',                       tech: ['Next.js', 'GSAP', 'Tailwind CSS'] },
-  { title: 'MVPcommunity',        position: [ 6, 40,    -60], tier: 2, transitionType: 'dive',    description: 'Community platform connecting founders and builders',             tech: ['Next.js', 'Supabase', 'Real-time'] },
-  { title: 'Baseaim',             position: [ 0, 47,    -75], tier: 2, transitionType: 'dive',    description: 'Full-service digital agency specializing in web and growth',      tech: ['Next.js', 'React', 'Node.js'] },
-  { title: 'Airtable Clone',      position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback', description: 'Full-stack database application inspired by Airtable',           tech: ['Next.js', 'PostgreSQL', 'Real-time Sync'] },
-  { title: 'The Observatory',     position: [-7, 118,  -105], tier: 3, transitionType: 'ascend', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
+  { title: 'Spline Experiments',  position: [ -8, 14,   -14], tier: 1, transitionType: 'first',   description: 'Interactive 3D web experiences built with Spline',              tech: ['Spline', 'React', 'Three.js'] },
+  { title: 'CYS Accountants',     position: [ 10, 15,   -28], tier: 1, transitionType: 'dive',    description: 'Professional accounting firm website with modern design',        tech: ['Next.js', 'Tailwind CSS'] },
+  { title: 'AI Website',          position: [  0, 14,   -42], tier: 1, transitionType: 'dive',    description: 'AI-powered web application with intelligent features',            tech: ['Next.js', 'OpenAI API', 'React'] },
+  { title: 'RyderDigital',        position: [-11, 15,   -58], tier: 2, transitionType: 'pullback', description: 'Web design agency portfolio and services',                       tech: ['Next.js', 'GSAP', 'Tailwind CSS'] },
+  { title: 'MVPcommunity',        position: [ 12, 14,   -74], tier: 2, transitionType: 'dive',    description: 'Community platform connecting founders and builders',             tech: ['Next.js', 'Supabase', 'Real-time'] },
+  { title: 'Baseaim',             position: [  0, 15,   -90], tier: 2, transitionType: 'dive',    description: 'Full-service digital agency specializing in web and growth',      tech: ['Next.js', 'React', 'Node.js'] },
+  { title: 'Airtable Clone',      position: [-13, 14,  -110], tier: 3, transitionType: 'pullback', description: 'Full-stack database application inspired by Airtable',           tech: ['Next.js', 'PostgreSQL', 'Real-time Sync'] },
+  { title: 'The Observatory',     position: [ -7, 118, -128], tier: 3, transitionType: 'ascend', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
 ]
 
 // Baseaim archipelago — sub-islands rendered around the main Baseaim cluster stop
 // PLANE 2 (tier 2) — upper/behind the main island
 // PLANE 1 (tier 1) — lower/in-front, including the Funnels pipeline cluster
 const BASEAIM_SUBS: ClusterSubConfig[] = [
-  // — PLANE 1 (all Baseaim sub-islands) —
-  { title: 'Baseaim.co Website',       position: [-8, 42,   -66], scale: [4.8, 1.0, 4.0], tier: 1, description: 'Agency website for Baseaim digital services',      tech: ['Next.js', 'Tailwind', 'Framer Motion'] },
-  { title: 'Baseaim Auditor Software', position: [ 7, 42.5, -68], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Automated website auditing software',               tech: ['Next.js', 'Puppeteer', 'AI Analysis'] },
-  { title: 'Baseaim Client Dashboard', position: [-7, 44,   -70], scale: [4.5, 0.9, 3.5], tier: 1, description: 'Client management dashboard for Baseaim agency',    tech: ['React', 'Node.js', 'Tailwind'] },
-  { title: 'Baseaim Funnels',         position: [ 6, 45,   -73], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Conversion-optimized sales funnel system',           tech: ['Next.js', 'Analytics', 'A/B Testing'] },
+  // — PLANE 1 (all Baseaim sub-islands) — Z offset from main Baseaim at [0, 15, -90]
+  { title: 'Baseaim.co Website',       position: [-8, 12,   -81], scale: [4.8, 1.0, 4.0], tier: 1, description: 'Agency website for Baseaim digital services',      tech: ['Next.js', 'Tailwind', 'Framer Motion'] },
+  { title: 'Baseaim Auditor Software', position: [ 7, 12.5, -83], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Automated website auditing software',               tech: ['Next.js', 'Puppeteer', 'AI Analysis'] },
+  { title: 'Baseaim Client Dashboard', position: [-7, 14,   -85], scale: [4.5, 0.9, 3.5], tier: 1, description: 'Client management dashboard for Baseaim agency',    tech: ['React', 'Node.js', 'Tailwind'] },
+  { title: 'Baseaim Funnels',         position: [ 6, 15,   -88], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Conversion-optimized sales funnel system',           tech: ['Next.js', 'Analytics', 'A/B Testing'] },
   // Funnel pipeline — minimal text labels, cascading arc off the Funnels island
-  { title: 'AB Tested VSLs',          position: [10, 44.5, -70], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Preframe',                position: [12, 44,   -72], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Thank You',               position: [12, 43.5, -74], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Onboarding',             position: [10, 43,   -76], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'AB Tested VSLs',          position: [10, 14.5, -85], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Preframe',                position: [12, 14,   -87], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Thank You',               position: [12, 13.5, -89], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Onboarding',             position: [10, 13,   -91], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
 ]
 
 const PLATFORM_SCALES: Record<1 | 2 | 3, [number, number, number]> = {
@@ -102,15 +103,16 @@ function buildCameraPath(projects: ProjectConfig[]): {
     quats.push(lookAtQuat([v.x, v.y, v.z], lookAt))
   }
 
-  // Gate approach — camera starts LOW looking UP at the gate high above.
+  // Gate approach — camera starts FAR BACK looking UP at the gate high above.
   // Gate is at [0, 15, -6]. Camera ascends like climbing heavenly stairs.
-  push(new THREE.Vector3(0, -5, 8),  [0, 15, -6])  // start: looking up at gate
-  push(new THREE.Vector3(0,  2, 4),  [0, 15, -6])  // rising, approaching
-  push(new THREE.Vector3(0,  8, 0),  [0, 15, -6])  // level with gate, about to pass through
+  push(new THREE.Vector3(0, -5, 28), [0, 15, -6])  // start: far back, looking up at gate
+  push(new THREE.Vector3(0,  2, 16), [0, 15, -6])  // rising, approaching
+  push(new THREE.Vector3(0, 10,  4), [0, 15, -6])  // near gate, still ascending
 
   const first = projects[0]
-  // Just past gate — transitioning toward first island
-  push(new THREE.Vector3(0, 10, -5), first.position)
+  // Level off AT the gate — camera reaches gate height then stops ascending
+  push(new THREE.Vector3(0, 14,  0), [0, 15, -6])   // at gate level, stop ascending
+  push(new THREE.Vector3(0, 14, -5), first.position) // through gate, level flight begins
 
   // First close-up
   push(closeUpOf(first), first.position)
@@ -194,31 +196,31 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
     <>
       <ambientLight intensity={0.25} color="#daa520" />
 
-      {/* Tier 1 lights — Z -10 to -30 */}
-      <pointLight position={[-4,  0.8,  -8]} intensity={8}  color="#f5e080" distance={40} decay={1.5} />
-      <pointLight position={[ 5,  5.8, -18]} intensity={4}  color="#daa520" distance={25} decay={2} />
-      <pointLight position={[ 0, 12.8, -28]} intensity={4}  color="#f0d060" distance={28} decay={2} />
+      {/* Tier 1 lights — Z -14 to -42 */}
+      <pointLight position={[ -8, 14,   -12]} intensity={8}  color="#f5e080" distance={40} decay={1.5} />
+      <pointLight position={[ 10, 15,   -26]} intensity={4}  color="#daa520" distance={25} decay={2} />
+      <pointLight position={[  0, 14,   -40]} intensity={4}  color="#f0d060" distance={28} decay={2} />
 
-      {/* Tier 2 lights — Z -45 to -75 */}
-      <pointLight position={[-7, 32,   -43]} intensity={10} color="#f5e080" distance={55} decay={1.5} />
-      <pointLight position={[ 6, 40,   -58]} intensity={5}  color="#f0d060" distance={38} decay={2} />
-      <pointLight position={[ 0, 47,   -73]} intensity={5}  color="#daa520" distance={38} decay={2} />
+      {/* Tier 2 lights — Z -58 to -90 */}
+      <pointLight position={[-11, 15,   -56]} intensity={10} color="#f5e080" distance={55} decay={1.5} />
+      <pointLight position={[ 12, 14,   -72]} intensity={5}  color="#f0d060" distance={38} decay={2} />
+      <pointLight position={[  0, 15,   -88]} intensity={5}  color="#daa520" distance={38} decay={2} />
 
-      {/* Tier 3 lights — Z -90 to -120 */}
-      <pointLight position={[-7, 64.5,  -88]} intensity={14} color="#f5e080" distance={65} decay={1.5} />
-      <pointLight position={[-7, 116, -103]} intensity={9}  color="#f5e080" distance={55} decay={1.5} />
-      <pointLight position={[ 0, 80,   -118]} intensity={8}  color="#f0d060" distance={45} decay={2} />
+      {/* Tier 3 lights — Z -110 to -128 */}
+      <pointLight position={[-13, 14,  -108]} intensity={14} color="#f5e080" distance={65} decay={1.5} />
+      <pointLight position={[ -7, 116, -126]} intensity={9}  color="#f5e080" distance={55} decay={1.5} />
+      <pointLight position={[  0,  80, -126]} intensity={8}  color="#f0d060" distance={45} decay={2} />
 
       {/* Sparkles at each tier's depth midpoint */}
-      <group position={[0,  5,  -20]}>
+      <group position={[0, 14,  -28]}>
         <Sparkles count={150} scale={[30, 30, 25]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
         <Sparkles count={80}  scale={[22, 22, 20]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
       </group>
-      <group position={[0, 40,  -58]}>
+      <group position={[0, 14,  -74]}>
         <Sparkles count={150} scale={[30, 30, 35]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
         <Sparkles count={80}  scale={[22, 22, 28]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
       </group>
-      <group position={[0, 68, -100]}>
+      <group position={[0, 40, -118]}>
         <Sparkles count={150} scale={[30, 30, 35]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
         <Sparkles count={80}  scale={[22, 22, 28]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
         <Sparkles count={50}  scale={[16, 16, 20]} size={8}   speed={0.04} opacity={0.28} color="#ffffff" />
@@ -282,7 +284,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
 export default function CelestialScene({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   return (
     <Canvas
-      camera={{ position: [0, -5, 8], fov: 55, near: 0.1, far: 350 }}
+      camera={{ position: [0, -5, 28], fov: 45, near: 0.1, far: 350 }}
       dpr={[1, 1.5]}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
       style={{ background: '#1e1004' }}
