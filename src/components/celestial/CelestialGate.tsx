@@ -16,8 +16,8 @@ const PANEL_W = 7       // half-width — each panel is 7 units wide
 const PANEL_H = 20      // tall enough to fill view
 const PANEL_D = 0.35
 
-const GATE_OPEN_AT = 0.12   // fully rotated open by 12% scroll progress
-const GATE_HIDE_AT = 0.19   // hidden entirely by 19% (panels folded back, no longer needed)
+const GATE_OPEN_AT = 0.18   // fully rotated open by 18% scroll progress
+const GATE_HIDE_AT = 0.25   // hidden entirely by 25% (panels folded back, no longer needed)
 
 export function CelestialGate({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   const outerRef   = useRef<THREE.Group>(null)
@@ -29,9 +29,9 @@ export function CelestialGate({ progressRef }: { progressRef: React.MutableRefOb
     const p = progressRef.current
     const gateProgress = Math.min(1, p / GATE_OPEN_AT)
 
-    // Rotate panels open: left swings -90°, right swings +90°
-    if (leftRef.current)  leftRef.current.rotation.y  = -gateProgress * (Math.PI / 2)
-    if (rightRef.current) rightRef.current.rotation.y =  gateProgress * (Math.PI / 2)
+    // Rotate panels open: left swings -120°, right swings +120°
+    if (leftRef.current)  leftRef.current.rotation.y  = -gateProgress * (Math.PI * 2 / 3)
+    if (rightRef.current) rightRef.current.rotation.y =  gateProgress * (Math.PI * 2 / 3)
 
     // Light behind gates floods in as they open, then dies as gates hide
     if (lightRef.current) lightRef.current.intensity = gateProgress * 20
@@ -41,7 +41,7 @@ export function CelestialGate({ progressRef }: { progressRef: React.MutableRefOb
   })
 
   return (
-    <group ref={outerRef} position={[GATE_X, GATE_Y, GATE_Z]}>
+    <group ref={outerRef} position={[GATE_X, GATE_Y, GATE_Z]} rotation={[Math.PI * 0.3, 0, 0]}>
 
       {/* ── Left panel — hinge at x = -PANEL_W ── */}
       <group ref={leftRef} position={[-PANEL_W, 0, 0]}>

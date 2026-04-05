@@ -47,7 +47,7 @@ const PROJECTS: ProjectConfig[] = [
   { title: 'Spline Experiments',  position: [-4,  0.8,  -10], tier: 1, transitionType: 'first',   description: 'Interactive 3D web experiences built with Spline',              tech: ['Spline', 'React', 'Three.js'] },
   { title: 'CYS Accountants',     position: [ 5,  5.8,  -20], tier: 1, transitionType: 'dive',    description: 'Professional accounting firm website with modern design',        tech: ['Next.js', 'Tailwind CSS'] },
   { title: 'AI Website',          position: [ 0, 12.8,  -30], tier: 1, transitionType: 'dive',    description: 'AI-powered web application with intelligent features',            tech: ['Next.js', 'OpenAI API', 'React'] },
-  { title: 'RyderDigital',        position: [-7, 32,    -45], tier: 2, transitionType: 'pullback', description: 'Web design agency portfolio and services',                       tech: ['Next.js', 'GSAP', 'Tailwind CSS'] },
+  { title: 'RyderDigital',        position: [-4, 32,    -45], tier: 2, transitionType: 'pullback', description: 'Web design agency portfolio and services',                       tech: ['Next.js', 'GSAP', 'Tailwind CSS'] },
   { title: 'MVPcommunity',        position: [ 6, 40,    -60], tier: 2, transitionType: 'dive',    description: 'Community platform connecting founders and builders',             tech: ['Next.js', 'Supabase', 'Real-time'] },
   { title: 'Baseaim',             position: [ 0, 47,    -75], tier: 2, transitionType: 'dive',    description: 'Full-service digital agency specializing in web and growth',      tech: ['Next.js', 'React', 'Node.js'] },
   { title: 'Airtable Clone',      position: [-7, 64.5,  -90], tier: 3, transitionType: 'pullback', description: 'Full-stack database application inspired by Airtable',           tech: ['Next.js', 'PostgreSQL', 'Real-time Sync'] },
@@ -137,13 +137,11 @@ function buildCameraPath(projects: ProjectConfig[]): {
       )
       push(cu, proj.position)
     } else if (proj.transitionType === 'ascend') {
-      // Force straight vertical: 4 intermediates all share Observatory's exact X/Z.
+      // Force straight vertical: 2 intermediates all share Observatory's exact X/Z.
       // CatmullRomCurve3 cannot deviate in X or Z when all control points are collinear.
       const yRange = cu.y - prevCu.y
-      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.2,  cu.z), proj.position)
-      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.45, cu.z), proj.position)
-      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.70, cu.z), proj.position)
-      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.90, cu.z), proj.position)
+      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.33, cu.z), proj.position)
+      push(new THREE.Vector3(proj.position[0], prevCu.y + yRange * 0.67, cu.z), proj.position)
       push(cu, proj.position)
     }
   }
@@ -167,8 +165,10 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
   const qEnd   = useRef(new THREE.Quaternion())
 
   useEffect(() => {
-    scene.fog = new THREE.FogExp2(new THREE.Color('#1e1004'), 0.005)
-    return () => { scene.fog = null }
+    const bg = new THREE.Color('#1e1004')
+    scene.background = bg
+    scene.fog = new THREE.FogExp2(bg, 0.005)
+    return () => { scene.fog = null; scene.background = null }
   }, [scene])
 
   useFrame((_, delta) => {
@@ -281,7 +281,7 @@ export default function CelestialScene({ progressRef }: { progressRef: React.Mut
       camera={{ position: [0, -13.2, 1], fov: 55, near: 0.1, far: 350 }}
       dpr={[1, 1.5]}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true }}
-      style={{ background: '#0d0702' }}
+      style={{ background: '#1e1004' }}
     >
       <Suspense fallback={null}>
         <SceneContent progressRef={progressRef} />
