@@ -100,57 +100,61 @@ export function CelestialGate({ progressRef }: { progressRef: React.MutableRefOb
         />
       </group>
 
-      {/* ── Cloud stair platforms — heavenly stairway ascending to the gate ── */}
+      {/* ── Cloud stair platforms — heavenly stairway ascending alongside the camera path ──
+           Camera path: [0,-5,28] → [0,2,16] → [0,10,4] → [0,14,0] → through gate
+           Clouds track the camera's Y and Z at each step, flanking it left/right ── */}
 
-      {/* Bottom stairs near camera start (world Y ≈ 0) */}
-      <RoundedBox args={[4.5, 1.5, 3.5]} position={[-7, -1, 4]} radius={0.55} smoothness={4}>
-        <meshStandardMaterial color="#e8e0d0" emissive="#f5e080" emissiveIntensity={0.18} roughness={0.85} metalness={0.05} />
+      {/* Step 1 — beside camera start (Y≈-4, Z≈22): large, bright anchors */}
+      <RoundedBox args={[9, 3.5, 7]} position={[-11, -4, 22]} radius={0.8} smoothness={4}>
+        <meshStandardMaterial color="#e8e0d0" emissive="#f5e080" emissiveIntensity={0.65} roughness={0.78} metalness={0.06} />
       </RoundedBox>
-      <RoundedBox args={[4.5, 1.5, 3.5]} position={[7, -1, 4]} radius={0.55} smoothness={4}>
-        <meshStandardMaterial color="#e8e0d0" emissive="#f5e080" emissiveIntensity={0.18} roughness={0.85} metalness={0.05} />
-      </RoundedBox>
-
-      {/* Mid stairs (world Y ≈ 5) */}
-      <RoundedBox args={[5.5, 1.8, 4]} position={[-9, 5, 1]} radius={0.65} smoothness={4}>
-        <meshStandardMaterial color="#e8e0d0" emissive="#f5e080" emissiveIntensity={0.2} roughness={0.85} metalness={0.05} />
-      </RoundedBox>
-      <RoundedBox args={[5.5, 1.8, 4]} position={[9, 5, 1]} radius={0.65} smoothness={4}>
-        <meshStandardMaterial color="#e8e0d0" emissive="#f5e080" emissiveIntensity={0.2} roughness={0.85} metalness={0.05} />
+      <RoundedBox args={[9, 3.5, 7]} position={[11, -4, 22]} radius={0.8} smoothness={4}>
+        <meshStandardMaterial color="#e8e0d0" emissive="#f5e080" emissiveIntensity={0.65} roughness={0.78} metalness={0.06} />
       </RoundedBox>
 
-      {/* Upper stairs (world Y ≈ 10) */}
-      <RoundedBox args={[6, 2, 4.5]} position={[-10, 10, -3]} radius={0.7} smoothness={4}>
-        <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.22} roughness={0.82} metalness={0.06} />
+      {/* Step 2 — beside second camera keyframe (Y≈2, Z≈14): rising platforms */}
+      <RoundedBox args={[10, 4, 7.5]} position={[-13, 2, 14]} radius={0.9} smoothness={4}>
+        <meshStandardMaterial color="#ece5d4" emissive="#f5e080" emissiveIntensity={0.75} roughness={0.76} metalness={0.07} />
       </RoundedBox>
-      <RoundedBox args={[6, 2, 4.5]} position={[10, 10, -3]} radius={0.7} smoothness={4}>
-        <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.22} roughness={0.82} metalness={0.06} />
+      <RoundedBox args={[10, 4, 7.5]} position={[13, 2, 14]} radius={0.9} smoothness={4}>
+        <meshStandardMaterial color="#ece5d4" emissive="#f5e080" emissiveIntensity={0.75} roughness={0.76} metalness={0.07} />
       </RoundedBox>
 
-      {/* Gate-level flanking clouds (beside the gate at Y ≈ 15) */}
-      <RoundedBox args={[7, 2.5, 5]} position={[-12, 15, -6]} radius={0.85} smoothness={4}>
-        <meshStandardMaterial color="#f0ead8" emissive="#daa520" emissiveIntensity={0.25} roughness={0.8} metalness={0.08} />
+      {/* Step 3 — beside third camera keyframe (Y≈10, Z≈2): upper approach */}
+      <RoundedBox args={[11, 4.5, 8]} position={[-14, 10, 2]} radius={1.0} smoothness={4}>
+        <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.85} roughness={0.74} metalness={0.08} />
       </RoundedBox>
-      <RoundedBox args={[7, 2.5, 5]} position={[12, 15, -6]} radius={0.85} smoothness={4}>
-        <meshStandardMaterial color="#f0ead8" emissive="#daa520" emissiveIntensity={0.25} roughness={0.8} metalness={0.08} />
+      <RoundedBox args={[11, 4.5, 8]} position={[14, 10, 2]} radius={1.0} smoothness={4}>
+        <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.85} roughness={0.74} metalness={0.08} />
+      </RoundedBox>
+
+      {/* Gate-level flanking clouds (beside the gate at Y≈15, Z=-6): grandest step */}
+      <RoundedBox args={[12, 5, 9]} position={[-16, 15, -6]} radius={1.1} smoothness={4}>
+        <meshStandardMaterial color="#f0ead8" emissive="#daa520" emissiveIntensity={1.0} roughness={0.72} metalness={0.09} />
+      </RoundedBox>
+      <RoundedBox args={[12, 5, 9]} position={[16, 15, -6]} radius={1.1} smoothness={4}>
+        <meshStandardMaterial color="#f0ead8" emissive="#daa520" emissiveIntensity={1.0} roughness={0.72} metalness={0.09} />
       </RoundedBox>
 
       {/* Upper cloud canopy above the gate */}
-      <RoundedBox args={[11, 2, 6]} position={[0, 24, -7]} radius={0.95} smoothness={4}>
-        <meshStandardMaterial color="#f5f0e4" emissive="#f5e080" emissiveIntensity={0.2} roughness={0.8} metalness={0.05} />
+      <RoundedBox args={[13, 3, 8]} position={[0, 25, -7]} radius={1.1} smoothness={4}>
+        <meshStandardMaterial color="#f5f0e4" emissive="#f5e080" emissiveIntensity={0.7} roughness={0.75} metalness={0.06} />
       </RoundedBox>
-      <RoundedBox args={[5.5, 1.5, 4]} position={[-11, 21, -7]} radius={0.7} smoothness={4}>
-        <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.18} roughness={0.82} metalness={0.05} />
+      <RoundedBox args={[8, 2.5, 6]} position={[-14, 22, -8]} radius={0.9} smoothness={4}>
+        <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.6} roughness={0.78} metalness={0.06} />
       </RoundedBox>
-      <RoundedBox args={[5.5, 1.5, 4]} position={[11, 21, -7]} radius={0.7} smoothness={4}>
-        <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.18} roughness={0.82} metalness={0.05} />
+      <RoundedBox args={[8, 2.5, 6]} position={[14, 22, -8]} radius={0.9} smoothness={4}>
+        <meshStandardMaterial color="#ede8dc" emissive="#f5e080" emissiveIntensity={0.6} roughness={0.78} metalness={0.06} />
       </RoundedBox>
 
-      {/* Atmospheric point lights on the stair clouds */}
-      <pointLight position={[-7, 0, 4]}  intensity={3} color="#f5e080" distance={14} decay={2} />
-      <pointLight position={[7,  0, 4]}  intensity={3} color="#f5e080" distance={14} decay={2} />
-      <pointLight position={[0,  7, 0]}  intensity={5} color="#daa520" distance={22} decay={2} />
-      <pointLight position={[0, 14, -5]} intensity={6} color="#f5e080" distance={25} decay={1.8} />
-      <pointLight position={[0, 22, -7]} intensity={4} color="#f5e080" distance={18} decay={2} />
+      {/* Atmospheric point lights on the stair clouds — stronger to ensure visibility */}
+      <pointLight position={[-11, -3, 22]} intensity={8}  color="#f5e080" distance={20} decay={2} />
+      <pointLight position={[ 11, -3, 22]} intensity={8}  color="#f5e080" distance={20} decay={2} />
+      <pointLight position={[-13,  3, 14]} intensity={10} color="#daa520" distance={26} decay={2} />
+      <pointLight position={[ 13,  3, 14]} intensity={10} color="#daa520" distance={26} decay={2} />
+      <pointLight position={[  0, 10,  2]} intensity={12} color="#f5e080" distance={32} decay={1.8} />
+      <pointLight position={[  0, 14, -5]} intensity={14} color="#f5e080" distance={35} decay={1.8} />
+      <pointLight position={[  0, 24, -7]} intensity={8}  color="#f5e080" distance={22} decay={2} />
     </group>
   )
 }
