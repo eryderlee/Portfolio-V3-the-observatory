@@ -42,17 +42,17 @@ interface ClusterSubConfig {
   minimal?: boolean
 }
 
-// First 2 islands at gate-level Y (~14) so camera doesn't pitch after passing through.
-// AI Website slightly higher, then Tier 2 and Tier 3 islands ascend progressively.
-// Observatory at Y=118 is the dramatic final ascent. Tier 1: Z=-14 to -42 | Tier 2: Z=-58 to -90 | Tier 3: Z=-110 to -128
+// Tier 1: Z=-14 to -42 | Tier 2: Z=-58 to -90 | Tier 3: Z=-110 to -128
+// Plane 1: BookeepAI Dashboard, CYS Accountants, CoFarming Hub, Baseaim Archipelago (cluster)
+// Plane 2: RyderDigital, MVPcommunity | Plane 3: Airtable Clone | Final: The Observatory
 const PROJECTS: ProjectConfig[] = [
-  { title: 'Spline Experiments',  position: [ -8, 14,   -14], tier: 1, transitionType: 'first',   description: 'Interactive 3D web experiences built with Spline',              tech: ['Spline', 'React', 'Three.js'] },
-  { title: 'CYS Accountants',     position: [ 10, 15,   -28], tier: 1, transitionType: 'dive',    description: 'Professional accounting firm website with modern design',        tech: ['Next.js', 'Tailwind CSS'] },
-  { title: 'AI Website',          position: [  0, 17,   -42], tier: 1, transitionType: 'dive',    description: 'AI-powered web application with intelligent features',            tech: ['Next.js', 'OpenAI API', 'React'] },
-  { title: 'RyderDigital',        position: [-11, 35,   -58], tier: 2, transitionType: 'pullback', description: 'Web design agency portfolio and services',                       tech: ['Next.js', 'GSAP', 'Tailwind CSS'] },
-  { title: 'MVPcommunity',        position: [ 12, 43,   -74], tier: 2, transitionType: 'dive',    description: 'Community platform connecting founders and builders',             tech: ['Next.js', 'Supabase', 'Real-time'] },
-  { title: 'Baseaim',             position: [  0, 50,   -90], tier: 2, transitionType: 'dive',    description: 'Full-service digital agency specializing in web and growth',      tech: ['Next.js', 'React', 'Node.js'] },
-  { title: 'Airtable Clone',      position: [-13, 64,  -110], tier: 3, transitionType: 'pullback', description: 'Full-stack database application inspired by Airtable',           tech: ['Next.js', 'PostgreSQL', 'Real-time Sync'] },
+  { title: 'BookeepAI Dashboard', position: [ -8, 14,   -14], tier: 1, transitionType: 'first',   description: 'Internal bookkeeping operations dashboard',               tech: ['React', 'Supabase', 'Tailwind'] },
+  { title: 'CYS Accountants',     position: [ 10, 15,   -28], tier: 1, transitionType: 'dive',    description: 'Professional accounting firm website with modern design',  tech: ['Next.js', 'Tailwind CSS'] },
+  { title: 'CoFarming Hub',       position: [  0, 17,   -42], tier: 1, transitionType: 'dive',    description: 'Community platform for collaborative farming',             tech: ['HTML', 'CSS', 'Node.js'] },
+  { title: 'RyderDigital',        position: [-11, 35,   -58], tier: 2, transitionType: 'pullback', description: 'Web design agency portfolio and services',                tech: ['Next.js', 'GSAP', 'Tailwind CSS'] },
+  { title: 'MVPcommunity',        position: [ 12, 43,   -74], tier: 2, transitionType: 'dive',    description: 'Community platform connecting founders and builders',      tech: ['Next.js', 'Supabase', 'Real-time'] },
+  { title: 'Baseaim',             position: [  0, 50,   -90], tier: 2, transitionType: 'dive',    description: 'Full-service digital agency specializing in web and growth', tech: ['Next.js', 'React', 'Node.js'] },
+  { title: 'Airtable Clone',      position: [-13, 64,  -110], tier: 3, transitionType: 'pullback', description: 'Full-stack database application inspired by Airtable',    tech: ['Next.js', 'PostgreSQL', 'Real-time Sync'] },
   { title: 'The Observatory',     position: [ -7, 118, -128], tier: 3, transitionType: 'ascend', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
 ]
 
@@ -61,15 +61,16 @@ const PROJECTS: ProjectConfig[] = [
 // PLANE 1 (tier 1) — lower/in-front, including the Funnels pipeline cluster
 const BASEAIM_SUBS: ClusterSubConfig[] = [
   // — PLANE 1 (all Baseaim sub-islands) — Z offset from main Baseaim at [0, 50, -90]
-  { title: 'Baseaim.co Website',       position: [-8, 47,   -81], scale: [4.8, 1.0, 4.0], tier: 1, description: 'Agency website for Baseaim digital services',      tech: ['Next.js', 'Tailwind', 'Framer Motion'] },
-  { title: 'Baseaim Auditor Software', position: [ 7, 47.5, -83], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Automated website auditing software',               tech: ['Next.js', 'Puppeteer', 'AI Analysis'] },
-  { title: 'Baseaim Client Dashboard', position: [-7, 49,   -85], scale: [4.5, 0.9, 3.5], tier: 1, description: 'Client management dashboard for Baseaim agency',    tech: ['React', 'Node.js', 'Tailwind'] },
-  { title: 'Baseaim Funnels',         position: [ 6, 50,   -88], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Conversion-optimized sales funnel system',           tech: ['Next.js', 'Analytics', 'A/B Testing'] },
+  { title: 'Baseaim.co Website',       position: [-8, 47,   -81], scale: [4.8, 1.0, 4.0], tier: 1, description: 'Agency website for Baseaim digital services',                    tech: ['Next.js', 'Tailwind', 'Framer Motion'] },
+  { title: 'ROI Audit Agent',          position: [ 7, 47.5, -83], scale: [5.5, 1.1, 4.5], tier: 1, description: 'AI ROI calculator for customer service automation',               tech: ['Next.js', 'Supabase', 'AI Analysis'] },
+  { title: 'Baseaim Client Dashboard', position: [-7, 49,   -85], scale: [4.5, 0.9, 3.5], tier: 1, description: 'Client management dashboard for Baseaim agency',                 tech: ['React', 'Node.js', 'Tailwind'] },
+  { title: 'Baseaim Funnels',          position: [ 6, 50,   -88], scale: [5.5, 1.1, 4.5], tier: 1, description: 'Conversion-optimized sales funnel system',                       tech: ['Next.js', 'Analytics', 'A/B Testing'] },
+  { title: 'equity.baseaim.co',        position: [-9, 48.5, -87], scale: [4.5, 0.9, 3.5], tier: 1, description: 'Real-time equity tracking dashboard with visualizations',        tech: ['React', 'Supabase', 'Tailwind'] },
   // Funnel pipeline — minimal text labels, cascading arc off the Funnels island
-  { title: 'AB Tested VSLs',          position: [10, 49.5, -85], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Preframe',                position: [12, 49,   -87], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Thank You',               position: [12, 48.5, -89], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
-  { title: 'Onboarding',             position: [10, 48,   -91], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'AB Tested VSLs',           position: [10, 49.5, -85], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Preframe',                 position: [12, 49,   -87], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Thank You',                position: [12, 48.5, -89], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
+  { title: 'Onboarding',               position: [10, 48,   -91], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
 ]
 
 const PLATFORM_SCALES: Record<1 | 2 | 3, [number, number, number]> = {
