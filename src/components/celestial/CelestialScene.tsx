@@ -74,9 +74,9 @@ const BASEAIM_SUBS: ClusterSubConfig[] = [
 ]
 
 const PLATFORM_SCALES: Record<1 | 2 | 3, [number, number, number]> = {
-  1: [4.5, 0.9, 3.5],
-  2: [6.5, 1.3, 5.5],
-  3: [9,   2,   7.5],
+  1: [3.5, 0.7, 2.8],   // smaller: subtle, mysterious
+  2: [6.5, 1.3, 5.5],   // medium: grander
+  3: [10,  2.2, 8.5],   // largest: most imposing
 }
 
 // How far below the card position the platform centre sits (increases with tier scale)
@@ -169,13 +169,16 @@ const { curve: CURVE, quaternions: Q_KEYFRAMES } = buildCameraPath(PROJECTS)
 function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   const { camera, scene } = useThree()
   const smoothProgress = useRef(0)
-  const qStart = useRef(new THREE.Quaternion())
-  const qEnd   = useRef(new THREE.Quaternion())
+  const qStart  = useRef(new THREE.Quaternion())
+  const qEnd    = useRef(new THREE.Quaternion())
+  const fogRef  = useRef<THREE.FogExp2 | null>(null)
 
   useEffect(() => {
     const bg = new THREE.Color('#1e1004')
     scene.background = bg
-    scene.fog = new THREE.FogExp2(bg, 0.005)
+    const fog = new THREE.FogExp2(bg, 0.012)
+    scene.fog = fog
+    fogRef.current = fog
     return () => { scene.fog = null; scene.background = null }
   }, [scene])
 
@@ -192,40 +195,47 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
     qStart.current.copy(Q_KEYFRAMES[segIdx])
     qEnd.current.copy(Q_KEYFRAMES[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
+
+    // Dynamic fog: thick/mysterious at Tier 1 (t≈0), clear/grand at Tier 3 (t≈1)
+    if (fogRef.current) {
+      const targetDensity = THREE.MathUtils.lerp(0.012, 0.003, t)
+      fogRef.current.density = THREE.MathUtils.damp(fogRef.current.density, targetDensity, 2, delta)
+    }
   })
 
   return (
     <>
-      <ambientLight intensity={0.25} color="#daa520" />
+      <ambientLight intensity={0.18} color="#daa520" />
 
-      {/* Tier 1 lights — Z -14 to -42, Y 14–17 */}
-      <pointLight position={[ -8, 14,   -12]} intensity={8}  color="#f5e080" distance={40} decay={1.5} />
-      <pointLight position={[ 10, 15,   -26]} intensity={4}  color="#daa520" distance={25} decay={2} />
-      <pointLight position={[  0, 17,   -40]} intensity={4}  color="#f0d060" distance={28} decay={2} />
+      {/* Tier 1 lights — softer/dimmer (mysterious) */}
+      <pointLight position={[ -8, 14,   -12]} intensity={4}  color="#f0d870" distance={30} decay={2} />
+      <pointLight position={[ 10, 15,   -26]} intensity={3}  color="#daa520" distance={22} decay={2} />
+      <pointLight position={[  0, 17,   -40]} intensity={3}  color="#f0d060" distance={24} decay={2} />
 
-      {/* Tier 2 lights — Z -58 to -90, Y 35–50 (ascending) */}
-      <pointLight position={[-11, 35,   -56]} intensity={10} color="#f5e080" distance={55} decay={1.5} />
-      <pointLight position={[ 12, 43,   -72]} intensity={5}  color="#f0d060" distance={38} decay={2} />
-      <pointLight position={[  0, 50,   -88]} intensity={5}  color="#daa520" distance={38} decay={2} />
+      {/* Tier 2 lights — grander/brighter */}
+      <pointLight position={[-11, 35,   -56]} intensity={12} color="#f5e080" distance={60} decay={1.5} />
+      <pointLight position={[ 12, 43,   -72]} intensity={7}  color="#f0d060" distance={42} decay={1.8} />
+      <pointLight position={[  0, 50,   -88]} intensity={7}  color="#daa520" distance={42} decay={1.8} />
 
-      {/* Tier 3 lights — Z -110 to -128, Y 64–118 */}
-      <pointLight position={[-13, 64,  -108]} intensity={14} color="#f5e080" distance={65} decay={1.5} />
-      <pointLight position={[ -7, 116, -126]} intensity={9}  color="#f5e080" distance={55} decay={1.5} />
-      <pointLight position={[  0,  90, -126]} intensity={8}  color="#f0d060" distance={45} decay={2} />
+      {/* Tier 3 lights — brightest/most intense */}
+      <pointLight position={[-13, 64,  -108]} intensity={20} color="#f5e080" distance={80} decay={1.3} />
+      <pointLight position={[ -7, 116, -126]} intensity={14} color="#fff0a0" distance={70} decay={1.5} />
+      <pointLight position={[  0,  90, -126]} intensity={12} color="#f0d060" distance={55} decay={1.8} />
 
-      {/* Sparkles at each tier's depth midpoint */}
-      <group position={[0, 15,  -28]}>
-        <Sparkles count={150} scale={[30, 30, 25]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
-        <Sparkles count={80}  scale={[22, 22, 20]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
+      {/* Sparkles — tiered: subtle Tier 1 → spectacular Tier 3. Total ≈ 950 */}
+      <group position={[0, 15,  -28]}>{/* Tier 1: dim/sparse — mysterious */}
+        <Sparkles count={80}  scale={[22, 22, 20]} size={1.8} speed={0.15} opacity={0.38} color="#f5e080" />
+        <Sparkles count={40}  scale={[16, 16, 16]} size={3.5} speed={0.06} opacity={0.22} color="#daa520" />
       </group>
-      <group position={[0, 43,  -74]}>
-        <Sparkles count={150} scale={[30, 30, 35]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
-        <Sparkles count={80}  scale={[22, 22, 28]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
+      <group position={[0, 43,  -74]}>{/* Tier 2: medium density */}
+        <Sparkles count={160} scale={[32, 32, 38]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
+        <Sparkles count={90}  scale={[24, 24, 30]} size={5.5} speed={0.08} opacity={0.38} color="#daa520" />
       </group>
-      <group position={[0, 64, -118]}>
-        <Sparkles count={150} scale={[30, 30, 35]} size={2.5} speed={0.18} opacity={0.55} color="#f5e080" />
-        <Sparkles count={80}  scale={[22, 22, 28]} size={5}   speed={0.08} opacity={0.35} color="#daa520" />
-        <Sparkles count={50}  scale={[16, 16, 20]} size={8}   speed={0.04} opacity={0.28} color="#ffffff" />
+      <group position={[0, 64, -118]}>{/* Tier 3: densest, largest — grand reveal */}
+        <Sparkles count={250} scale={[36, 36, 40]} size={3.2} speed={0.20} opacity={0.65} color="#f5e080" />
+        <Sparkles count={150} scale={[28, 28, 32]} size={6.5} speed={0.10} opacity={0.45} color="#daa520" />
+        <Sparkles count={100} scale={[20, 20, 24]} size={9}   speed={0.05} opacity={0.30} color="#ffffff" />
+        <Sparkles count={80}  scale={[14, 14, 18]} size={12}  speed={0.03} opacity={0.18} color="#fff8e0" />
       </group>
 
       {/* Islands — auto-placed from PROJECTS data */}
@@ -277,7 +287,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
       <CelestialGate progressRef={progressRef} />
 
       <EffectComposer>
-        <Bloom luminanceThreshold={0.28} luminanceSmoothing={0.85} intensity={1.4} mipmapBlur />
+        <Bloom luminanceThreshold={0.35} luminanceSmoothing={0.9} intensity={1.2} mipmapBlur />
       </EffectComposer>
     </>
   )
