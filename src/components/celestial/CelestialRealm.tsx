@@ -438,6 +438,89 @@ export function CelestialRealm() {
                   ))}
                 </div>
               )}
+
+              {/* Project Details */}
+              <div
+                style={{
+                  marginTop: '28px',
+                  paddingTop: '22px',
+                  borderTop: `1px solid ${popupStyle.border}33`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '8px',
+                    letterSpacing: '0.45em',
+                    textTransform: 'uppercase',
+                    color: popupStyle.label,
+                    fontFamily: 'var(--font-playfair)',
+                    marginBottom: '14px',
+                    opacity: 0.55,
+                  }}
+                >
+                  Project Details
+                </div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '12px 20px',
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '7px',
+                        letterSpacing: '0.25em',
+                        textTransform: 'uppercase',
+                        color: popupStyle.label,
+                        fontFamily: 'var(--font-playfair)',
+                        opacity: 0.4,
+                        marginBottom: '5px',
+                      }}
+                    >
+                      Celestial Plane
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: popupStyle.text,
+                        fontFamily: 'var(--font-playfair)',
+                        fontStyle: 'italic',
+                        opacity: 0.8,
+                      }}
+                    >
+                      Plane {popup.tier}
+                    </div>
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '7px',
+                        letterSpacing: '0.25em',
+                        textTransform: 'uppercase',
+                        color: popupStyle.label,
+                        fontFamily: 'var(--font-playfair)',
+                        opacity: 0.4,
+                        marginBottom: '5px',
+                      }}
+                    >
+                      Technologies
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: popupStyle.text,
+                        fontFamily: 'var(--font-playfair)',
+                        fontStyle: 'italic',
+                        opacity: 0.8,
+                      }}
+                    >
+                      {popup.tech.length} in stack
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
