@@ -24,6 +24,7 @@ function lookAtQuat(
 interface ProjectConfig {
   title: string
   description?: string
+  expandedDescription?: string
   tech?: string[]
   url?: string
   position: [number, number, number]
@@ -36,6 +37,7 @@ interface ProjectConfig {
 interface ClusterSubConfig {
   title: string
   description?: string
+  expandedDescription?: string
   tech?: string[]
   url?: string
   position: [number, number, number]
@@ -48,14 +50,51 @@ interface ClusterSubConfig {
 // Plane 1: BookeepAI Dashboard, CYS Accountants, CoFarming Hub, Baseaim Archipelago (cluster)
 // Plane 2: RyderDigital, MVPcommunity | Plane 3: Airtable Clone | Final: The Observatory
 const PROJECTS: ProjectConfig[] = [
-  { title: 'BookeepAI Dashboard', position: [ -8, 14,   -14], tier: 1, transitionType: 'first',    url: '#',                                                        description: 'Internal bookkeeping operations dashboard',               tech: ['React', 'Supabase', 'Tailwind'] },
-  { title: 'CYS Accountants',     position: [ 10, 15,   -28], tier: 1, transitionType: 'dive',     url: '#',                                                        description: 'Professional accounting firm website with modern design',  tech: ['Next.js', 'Tailwind CSS'] },
-  { title: 'CoFarming Hub',       position: [  0, 17,   -42], tier: 1, transitionType: 'dive',     url: 'https://cofarminghub.com.au',                              description: 'Community platform for collaborative farming',             tech: ['HTML', 'CSS', 'Node.js'] },
-  { title: 'RyderDigital',        position: [-11, 35,   -58], tier: 2, transitionType: 'pullback', url: '#',                                                        description: 'Web design agency portfolio and services',                tech: ['Next.js', 'GSAP', 'Tailwind CSS'] },
-  { title: 'MVPcommunity',        position: [ 12, 43,   -74], tier: 2, transitionType: 'dive',     url: '#',                                                        description: 'Community platform connecting founders and builders',      tech: ['Next.js', 'Supabase', 'Real-time'] },
-  { title: 'Baseaim',             position: [  0, 50,   -90], tier: 2, transitionType: 'dive',     url: '#',                                                        description: 'Full-service digital agency specializing in web and growth', tech: ['Next.js', 'React', 'Node.js'] },
-  { title: 'Airtable Clone',      position: [-13, 64,  -110], tier: 3, transitionType: 'pullback', url: '#',                                                        description: 'Full-stack database application inspired by Airtable',    tech: ['Next.js', 'PostgreSQL', 'Real-time Sync'] },
-  { title: 'The Observatory',     position: [ -7, 118, -128], tier: 3, transitionType: 'ascend',   url: 'https://portfolio-v3-the-observatory.vercel.app', rotation: [0.4, 0, 0], customScale: [22, 4.5, 18], description: 'This portfolio — an immersive experience spanning multiple dimensions' },
+  {
+    title: 'BookeepAI Dashboard', position: [ -8, 14,   -14], tier: 1, transitionType: 'first', url: '#',
+    description: 'Internal bookkeeping operations dashboard',
+    expandedDescription: 'An internal operations dashboard built for an AI-powered bookkeeping SaaS. Real-time financial summaries, automated transaction categorization, and client health metrics are surfaced through a clean interface built for speed. Designed to give the Bookkeep team a single command center for monitoring thousands of client accounts.',
+    tech: ['React', 'Supabase', 'Tailwind'],
+  },
+  {
+    title: 'CYS Accountants', position: [ 10, 15,   -28], tier: 1, transitionType: 'dive', url: '#',
+    description: 'Professional accounting firm website with modern design',
+    expandedDescription: 'A professional website for CYS Accountants, a Sydney-based firm seeking a modern digital identity to attract business clients. The design balances approachability with authority — clean typography, clear service offerings, and a streamlined inquiry flow. Built with Next.js for fast delivery and long-term maintainability.',
+    tech: ['Next.js', 'Tailwind CSS'],
+  },
+  {
+    title: 'CoFarming Hub', position: [  0, 17,   -42], tier: 1, transitionType: 'dive', url: 'https://cofarminghub.com.au',
+    description: 'Community platform for collaborative farming',
+    tech: ['HTML', 'CSS', 'Node.js'],
+  },
+  {
+    title: 'RyderDigital', position: [-11, 35,   -58], tier: 2, transitionType: 'pullback', url: '#',
+    description: 'Web design agency portfolio and services',
+    expandedDescription: 'A full-service web design agency portfolio showcasing RyderDigital\'s premium client work and capabilities. Motion-rich animations built with GSAP communicate craft before a word is read — case studies unfold, service offerings reveal, and the contact flow guides visitors toward conversion. Positioned as a high-end digital studio in a crowded market.',
+    tech: ['Next.js', 'GSAP', 'Tailwind CSS'],
+  },
+  {
+    title: 'MVPcommunity', position: [ 12, 43,   -74], tier: 2, transitionType: 'dive', url: '#',
+    description: 'Community platform connecting founders and builders',
+    expandedDescription: 'A community platform purpose-built for early-stage founders and builders to connect, share progress, and find collaborators. Real-time discussion threads, milestone check-ins, and curated resource feeds create a space where momentum compounds. Supabase powers the live layer — every post, reply, and update lands instantly across the platform.',
+    tech: ['Next.js', 'Supabase', 'Real-time'],
+  },
+  {
+    title: 'Baseaim', position: [  0, 50,   -90], tier: 2, transitionType: 'dive', url: '#',
+    description: 'Full-service digital agency specializing in web and growth',
+    tech: ['Next.js', 'React', 'Node.js'],
+  },
+  {
+    title: 'Airtable Clone', position: [-13, 64,  -110], tier: 3, transitionType: 'pullback', url: '#',
+    description: 'Full-stack database application inspired by Airtable',
+    expandedDescription: 'A full-stack relational database application built from scratch, inspired by Airtable\'s flexible data model and collaborative workflow. Supports multiple view types — grid, gallery, kanban — with custom field schemas, real-time collaborative editing, and cross-table relational linking. A deep technical study in building spreadsheet-grade interfaces over a real database backend.',
+    tech: ['Next.js', 'PostgreSQL', 'Real-time Sync'],
+  },
+  {
+    title: 'The Observatory', position: [ -7, 118, -128], tier: 3, transitionType: 'ascend', url: 'https://portfolio-v3-the-observatory.vercel.app',
+    rotation: [0.4, 0, 0], customScale: [22, 4.5, 18],
+    description: 'This portfolio — an immersive experience spanning multiple dimensions',
+  },
 ]
 
 // Baseaim archipelago — sub-islands rendered around the main Baseaim cluster stop
@@ -63,11 +102,21 @@ const PROJECTS: ProjectConfig[] = [
 // PLANE 1 (tier 1) — lower/in-front, including the Funnels pipeline cluster
 const BASEAIM_SUBS: ClusterSubConfig[] = [
   // — PLANE 1 (all Baseaim sub-islands) — Z offset from main Baseaim at [0, 50, -90]
-  { title: 'Baseaim.co Website',       position: [-8, 47,   -81], scale: [4.8, 1.0, 4.0], tier: 1, url: 'https://baseaim.co',           description: 'Agency website for Baseaim digital services',              tech: ['Next.js', 'Tailwind', 'Framer Motion'] },
-  { title: 'ROI Audit Agent',          position: [ 7, 47.5, -83], scale: [5.5, 1.1, 4.5], tier: 1, url: '#',                            description: 'AI ROI calculator for customer service automation',         tech: ['Next.js', 'Supabase', 'AI Analysis'] },
-  { title: 'Baseaim Client Dashboard', position: [-7, 49,   -85], scale: [4.5, 0.9, 3.5], tier: 1, url: '#',                            description: 'Client management dashboard for Baseaim agency',           tech: ['React', 'Node.js', 'Tailwind'] },
-  { title: 'Baseaim Funnels',          position: [ 6, 50,   -88], scale: [5.5, 1.1, 4.5], tier: 1, url: '#',                            description: 'Conversion-optimized sales funnel system',                 tech: ['Next.js', 'Analytics', 'A/B Testing'] },
-  { title: 'equity.baseaim.co',        position: [-9, 48.5, -87], scale: [4.5, 0.9, 3.5], tier: 1, url: 'https://equity.baseaim.co',   description: 'Real-time equity tracking dashboard with visualizations',  tech: ['React', 'Supabase', 'Tailwind'] },
+  { title: 'Baseaim.co Website',       position: [-8, 47,   -81], scale: [4.8, 1.0, 4.0], tier: 1, url: 'https://baseaim.co',         description: 'Agency website for Baseaim digital services',             tech: ['Next.js', 'Tailwind', 'Framer Motion'] },
+  {
+    title: 'ROI Audit Agent',          position: [ 7, 47.5, -83], scale: [5.5, 1.1, 4.5], tier: 1, url: '#',
+    description: 'AI ROI calculator for customer service automation',
+    expandedDescription: 'An AI-powered calculator that translates automation potential into concrete business numbers for customer service teams. Clients input their current support metrics and receive a detailed projection of cost savings, resolution time improvements, and recovery revenue. Purpose-built as a high-conversion entry point for Baseaim\'s automation consulting practice.',
+    tech: ['Next.js', 'Supabase', 'AI Analysis'],
+  },
+  {
+    title: 'Baseaim Client Dashboard', position: [-7, 49,   -85], scale: [4.5, 0.9, 3.5], tier: 1, url: '#',
+    description: 'Client management dashboard for Baseaim agency',
+    expandedDescription: 'A private client portal that gives Baseaim agency customers full visibility into their active projects. Milestone timelines, deliverable tracking, file sharing, and team messaging replace the scattered back-and-forth of email threads. Built to set a new standard for client communication transparency in a boutique agency context.',
+    tech: ['React', 'Node.js', 'Tailwind'],
+  },
+  { title: 'Baseaim Funnels',          position: [ 6, 50,   -88], scale: [5.5, 1.1, 4.5], tier: 1, url: '#',                          description: 'Conversion-optimized sales funnel system',                tech: ['Next.js', 'Analytics', 'A/B Testing'] },
+  { title: 'equity.baseaim.co',        position: [-9, 48.5, -87], scale: [4.5, 0.9, 3.5], tier: 1, url: 'https://equity.baseaim.co', description: 'Real-time equity tracking dashboard with visualizations', tech: ['React', 'Supabase', 'Tailwind'] },
   // Funnel pipeline — minimal text labels, cascading arc off the Funnels island
   { title: 'AB Tested VSLs',           position: [10, 49.5, -85], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
   { title: 'Preframe',                 position: [12, 49,   -87], scale: [2.0, 0.5, 1.8], tier: 1, minimal: true },
@@ -260,6 +309,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
               title={p.title}
               tier={p.tier}
               description={p.description}
+              expandedDescription={p.expandedDescription}
               tech={p.tech}
               url={p.url}
             />
@@ -280,6 +330,7 @@ function SceneContent({ progressRef }: { progressRef: React.MutableRefObject<num
             title={sub.title}
             tier={sub.tier}
             description={sub.description}
+            expandedDescription={sub.expandedDescription}
             tech={sub.tech}
             minimal={sub.minimal}
             url={sub.url}

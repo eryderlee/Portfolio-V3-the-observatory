@@ -8,12 +8,26 @@ const CelestialScene = dynamic(() => import('./CelestialScene'), { ssr: false })
 
 const PLANE_THRESHOLDS = [0.33, 0.62]
 
+const POPUP_TIER_STYLES = {
+  1: { border: '#c0a860', glow: 'rgba(192,168,96,0.15)', glowHover: 'rgba(192,168,96,0.50)', text: '#f5f0e0', label: '#c0a860' },
+  2: { border: '#daa520', glow: 'rgba(218,165,32,0.20)', glowHover: 'rgba(218,165,32,0.60)', text: '#fff8dc', label: '#daa520' },
+  3: { border: '#f5e080', glow: 'rgba(245,224,128,0.30)', glowHover: 'rgba(245,224,128,0.70)', text: '#ffffff', label: '#f5e080' },
+} as const
+
+interface PopupData {
+  title: string
+  expandedDescription: string
+  tech: string[]
+  tier: 1 | 2 | 3
+}
+
 export function CelestialRealm() {
   const sectionRef   = useRef<HTMLDivElement>(null)
   const gateFlashRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [currentPlane, setCurrentPlane] = useState(1)
   const [hoveredPlane, setHoveredPlane] = useState<1 | 2 | 3 | null>(null)
+  const [popup, setPopup] = useState<PopupData | null>(null)
   const progressRef = useRef(0)
 
   // Mount/unmount canvas when section enters/leaves viewport
@@ -57,6 +71,36 @@ export function CelestialRealm() {
     return () => window.removeEventListener('scroll', update)
   }, [])
 
+  // Listen for popup open events from ProjectCard
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<PopupData>).detail
+      setPopup(detail)
+    }
+    window.addEventListener('celestial-project-open', handler)
+    return () => window.removeEventListener('celestial-project-open', handler)
+  }, [])
+
+  // Escape key closes popup
+  useEffect(() => {
+    if (!popup) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPopup(null)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [popup])
+
+  // Lock body scroll while popup is open
+  useEffect(() => {
+    if (popup) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [popup])
+
   const jumpToPlane = (plane: 1 | 2 | 3) => {
     const el = sectionRef.current
     if (!el) return
@@ -65,6 +109,8 @@ export function CelestialRealm() {
     const progress = plane === 1 ? 0 : plane === 2 ? PLANE_THRESHOLDS[0] : PLANE_THRESHOLDS[1]
     window.scrollTo({ top: sectionTop + progress * scrollable, behavior: 'smooth' })
   }
+
+  const popupStyle = popup ? POPUP_TIER_STYLES[popup.tier] : POPUP_TIER_STYLES[1]
 
   return (
     <div ref={sectionRef} style={{ position: 'relative', height: '1000vh' }}>
@@ -232,12 +278,183 @@ export function CelestialRealm() {
             })}
           </div>
         )}
+
+        {/* ── Celestial Project Popup ─────────────────────────────────────── */}
+        {popup && (
+          <div
+            onClick={() => setPopup(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 500,
+              background: 'rgba(6,3,1,0.84)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              animation: 'popup-backdrop-in 0.35s ease both',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                cursor: 'default',
+                position: 'relative',
+                maxWidth: '520px',
+                width: 'calc(100% - 48px)',
+                background: 'linear-gradient(150deg, rgba(28,17,4,0.99) 0%, rgba(16,9,2,0.99) 100%)',
+                border: `1px solid ${popupStyle.border}`,
+                boxShadow: [
+                  `0 0 0 1px rgba(0,0,0,0.95)`,
+                  `0 0 90px ${popupStyle.glowHover}`,
+                  `0 40px 120px rgba(0,0,0,0.95)`,
+                  `inset 0 0 60px ${popupStyle.glow}`,
+                ].join(', '),
+                padding: '48px 52px 44px',
+                animation: 'popup-modal-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+              }}
+            >
+              {/* Corner ornaments */}
+              {['top:12px;left:14px', 'top:12px;right:14px', 'bottom:12px;left:14px', 'bottom:12px;right:14px'].map((pos, i) => (
+                <span
+                  key={i}
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    ...(Object.fromEntries(pos.split(';').map(p => p.split(':')))),
+                    color: popupStyle.border,
+                    fontSize: '12px',
+                    opacity: 0.45,
+                    userSelect: 'none',
+                    lineHeight: 1,
+                  }}
+                >
+                  ✦
+                </span>
+              ))}
+
+              {/* Close button */}
+              <button
+                onClick={() => setPopup(null)}
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '20px',
+                  background: 'none',
+                  border: 'none',
+                  color: popupStyle.label,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  opacity: 0.65,
+                  fontFamily: 'var(--font-playfair)',
+                  lineHeight: 1,
+                  padding: '6px 10px',
+                  letterSpacing: '0.15em',
+                  transition: 'opacity 0.2s ease',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.65' }}
+              >
+                ✕
+              </button>
+
+              {/* Tier label */}
+              <div
+                style={{
+                  fontSize: '8px',
+                  letterSpacing: '0.65em',
+                  textTransform: 'uppercase',
+                  color: popupStyle.label,
+                  fontFamily: 'var(--font-playfair)',
+                  marginBottom: '18px',
+                  opacity: 0.7,
+                }}
+              >
+                Plane {popup.tier} · Celestial Realm
+              </div>
+
+              {/* Title */}
+              <h2
+                style={{
+                  fontFamily: 'var(--font-playfair)',
+                  fontStyle: 'italic',
+                  fontWeight: 700,
+                  fontSize: 'clamp(1.5rem, 4vw, 2.1rem)',
+                  color: popupStyle.text,
+                  lineHeight: 1.15,
+                  margin: '0 0 22px',
+                  textShadow: `0 0 40px ${popupStyle.glowHover}`,
+                }}
+              >
+                {popup.title}
+              </h2>
+
+              {/* Divider */}
+              <div
+                style={{
+                  height: '1px',
+                  background: `linear-gradient(90deg, transparent, ${popupStyle.border}, transparent)`,
+                  marginBottom: '22px',
+                  opacity: 0.5,
+                }}
+              />
+
+              {/* Expanded description */}
+              <p
+                style={{
+                  fontFamily: 'var(--font-playfair)',
+                  fontStyle: 'italic',
+                  fontSize: '13.5px',
+                  color: '#cfc5ae',
+                  lineHeight: 1.8,
+                  margin: '0 0 28px',
+                }}
+              >
+                {popup.expandedDescription}
+              </p>
+
+              {/* Tech pills */}
+              {popup.tech.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {popup.tech.map((t) => (
+                    <span
+                      key={t}
+                      style={{
+                        fontSize: '9px',
+                        letterSpacing: '0.18em',
+                        textTransform: 'uppercase',
+                        color: popupStyle.label,
+                        border: `1px solid ${popupStyle.border}`,
+                        padding: '5px 14px',
+                        fontFamily: 'var(--font-playfair)',
+                        opacity: 0.82,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <style>{`
         @keyframes celestial-bloom-in {
           from { opacity: 0; transform: scale(0.85); }
           to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes popup-backdrop-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes popup-modal-in {
+          from { opacity: 0; transform: scale(0.90) translateY(12px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
       `}</style>
     </div>

@@ -8,6 +8,7 @@ interface ProjectCardProps {
   title: string
   tier: 1 | 2 | 3
   description?: string
+  expandedDescription?: string
   tech?: string[]
   minimal?: boolean
   url?: string
@@ -46,11 +47,23 @@ const TIER_STYLES = {
   },
 }
 
-export function ProjectCard({ position, title, tier, description, tech, minimal, url }: ProjectCardProps) {
+export function ProjectCard({ position, title, tier, description, expandedDescription, tech, minimal, url }: ProjectCardProps) {
   const s = TIER_STYLES[tier]
   const [hovered, setHovered] = useState(false)
   const initial = title.charAt(0).toUpperCase()
   const href = url && url !== '#' ? url : null
+  const hasPopup = !href && (expandedDescription || description)
+
+  const openPopup = () => {
+    window.dispatchEvent(new CustomEvent('celestial-project-open', {
+      detail: {
+        title,
+        expandedDescription: expandedDescription || description || '',
+        tech: tech || [],
+        tier,
+      },
+    }))
+  }
 
   if (minimal) {
     return (
@@ -96,43 +109,49 @@ export function ProjectCard({ position, title, tier, description, tech, minimal,
           overflow: 'hidden',
         }}
       >
-        {/* Thumbnail */}
+        {/* Thumbnail — hidden at rest, fades in on hover */}
         <div
           style={{
-            height: '64px',
-            background: `linear-gradient(135deg, ${s.gradientA} 0%, ${s.gradientB} 100%)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderBottom: `1px solid ${hovered ? s.border : 'rgba(192,168,96,0.18)'}`,
-            transition: 'border-color 0.25s ease',
-            position: 'relative',
+            maxHeight: hovered ? '80px' : '0px',
+            opacity: hovered ? 1 : 0,
             overflow: 'hidden',
+            transition: 'max-height 0.35s ease, opacity 0.28s ease',
           }}
         >
           <div
             style={{
-              position: 'absolute',
-              inset: 0,
-              background: `radial-gradient(ellipse at center, ${s.glow} 0%, transparent 68%)`,
-            }}
-          />
-          <span
-            style={{
-              fontSize: '30px',
-              fontFamily: 'var(--font-playfair)',
-              fontStyle: 'italic',
-              fontWeight: 700,
-              color: s.labelHover,
-              textShadow: `0 0 18px ${s.border}, 0 0 38px ${s.glow}`,
+              height: '64px',
+              background: `linear-gradient(135deg, ${s.gradientA} 0%, ${s.gradientB} 100%)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderBottom: `1px solid ${s.border}`,
               position: 'relative',
-              zIndex: 1,
-              opacity: hovered ? 1 : 0.82,
-              transition: 'opacity 0.25s ease',
+              overflow: 'hidden',
             }}
           >
-            {initial}
-          </span>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: `radial-gradient(ellipse at center, ${s.glow} 0%, transparent 68%)`,
+              }}
+            />
+            <span
+              style={{
+                fontSize: '30px',
+                fontFamily: 'var(--font-playfair)',
+                fontStyle: 'italic',
+                fontWeight: 700,
+                color: s.labelHover,
+                textShadow: `0 0 18px ${s.border}, 0 0 38px ${s.glow}`,
+                position: 'relative',
+                zIndex: 1,
+              }}
+            >
+              {initial}
+            </span>
+          </div>
         </div>
 
         {/* Card body */}
@@ -166,24 +185,6 @@ export function ProjectCard({ position, title, tier, description, tech, minimal,
             {title}
           </div>
 
-          {/* Description */}
-          {description && (
-            <div
-              style={{
-                marginTop: '7px',
-                fontSize: '10px',
-                color: s.text,
-                fontFamily: 'var(--font-playfair)',
-                fontStyle: 'italic',
-                opacity: 0.72,
-                lineHeight: 1.45,
-                whiteSpace: 'normal',
-              }}
-            >
-              {description}
-            </div>
-          )}
-
           {/* Tech pills */}
           {tech && tech.length > 0 && (
             <div
@@ -214,7 +215,7 @@ export function ProjectCard({ position, title, tier, description, tech, minimal,
             </div>
           )}
 
-          {/* View Project link */}
+          {/* View Project — anchor for real URLs, button for popup */}
           {href ? (
             <a
               href={href}
@@ -240,16 +241,19 @@ export function ProjectCard({ position, title, tier, description, tech, minimal,
             </a>
           ) : (
             <div
+              onClick={hasPopup ? openPopup : undefined}
               style={{
                 marginTop: '10px',
                 paddingTop: '8px',
                 borderTop: `1px solid rgba(192,168,96,0.18)`,
                 fontSize: '9px',
                 letterSpacing: '0.25em',
-                color: s.label,
+                color: hovered && hasPopup ? s.labelHover : s.label,
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
-                opacity: 0.45,
+                cursor: hasPopup ? 'pointer' : 'default',
+                opacity: hasPopup ? 1 : 0.45,
+                transition: 'color 0.2s ease',
                 fontFamily: 'var(--font-playfair)',
               }}
             >
