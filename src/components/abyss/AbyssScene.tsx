@@ -60,48 +60,48 @@ const SURFACE_COLOR = new THREE.Color('#102850')
 const DEEP_COLOR    = new THREE.Color('#000000')
 
 // ---------------------------------------------------------------------------
-// Light rays — thin planes simulating sunlight shafts filtering through water
-// Only visible near surface; fade to invisible by progress 0.1
+// Light rays — thin plane shafts simulating surface light; gone by t=0.1
 // ---------------------------------------------------------------------------
 function LightRays({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
-  const mat0Ref = useRef<THREE.MeshBasicMaterial>(null)
-  const mat1Ref = useRef<THREE.MeshBasicMaterial>(null)
-  const mat2Ref = useRef<THREE.MeshBasicMaterial>(null)
-  const mat3Ref = useRef<THREE.MeshBasicMaterial>(null)
+  const groupRef = useRef<THREE.Group>(null)
+  const mat0Ref  = useRef<THREE.MeshBasicMaterial>(null)
+  const mat1Ref  = useRef<THREE.MeshBasicMaterial>(null)
+  const mat2Ref  = useRef<THREE.MeshBasicMaterial>(null)
+  const mat3Ref  = useRef<THREE.MeshBasicMaterial>(null)
 
   useFrame(() => {
     const t    = progressRef.current
-    // Gone by progress 0.1 (first ~100m)
     const base = Math.max(0, 1 - t / 0.1)
-    if (mat0Ref.current) mat0Ref.current.opacity = 0.06 * base
+    if (mat0Ref.current) mat0Ref.current.opacity = 0.07 * base
     if (mat1Ref.current) mat1Ref.current.opacity = 0.06 * base
-    if (mat2Ref.current) mat2Ref.current.opacity = 0.05 * base
-    if (mat3Ref.current) mat3Ref.current.opacity = 0.04 * base
+    if (mat2Ref.current) mat2Ref.current.opacity = 0.08 * base
+    if (mat3Ref.current) mat3Ref.current.opacity = 0.05 * base
+    if (groupRef.current) groupRef.current.visible = base > 0
   })
 
   return (
-    <>
-      <mesh position={[-4, 2, -3]} rotation={[0, 0.15, 0]}>
-        <planeGeometry args={[0.5, 28]} />
-        <meshBasicMaterial ref={mat0Ref} color="#88bbdd" transparent opacity={0.06}
+    <group ref={groupRef}>
+      <mesh position={[-3, 5, -2]} rotation={[0, 0.3, 0]}>
+        <planeGeometry args={[0.8, 40]} />
+        <meshBasicMaterial ref={mat0Ref} color="#88bbee" transparent opacity={0.07}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[3, 1, -5]} rotation={[0, -0.2, 0]}>
-        <planeGeometry args={[0.4, 26]} />
-        <meshBasicMaterial ref={mat1Ref} color="#6699cc" transparent opacity={0.06}
+      <mesh position={[2, 6, -4]} rotation={[0, -0.4, 0]}>
+        <planeGeometry args={[1.0, 38]} />
+        <meshBasicMaterial ref={mat1Ref} color="#88bbee" transparent opacity={0.06}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[6, 3, -1]} rotation={[0, 0.1, 0]}>
-        <planeGeometry args={[0.35, 22]} />
-        <meshBasicMaterial ref={mat2Ref} color="#88bbdd" transparent opacity={0.05}
+      <mesh position={[-6, 4, -6]} rotation={[0, 0.1, 0]}>
+        <planeGeometry args={[0.6, 35]} />
+        <meshBasicMaterial ref={mat2Ref} color="#88bbee" transparent opacity={0.08}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[-1, 4, -6]} rotation={[0, -0.08, 0]}>
-        <planeGeometry args={[0.3, 24]} />
-        <meshBasicMaterial ref={mat3Ref} color="#99ccee" transparent opacity={0.04}
+      <mesh position={[5, 5, -3]} rotation={[0, -0.2, 0]}>
+        <planeGeometry args={[0.7, 36]} />
+        <meshBasicMaterial ref={mat3Ref} color="#99ccff" transparent opacity={0.05}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-    </>
+    </group>
   )
 }
 
@@ -119,7 +119,7 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
 
   useEffect(() => {
     scene.background = bgColor.current
-    const fog = new THREE.FogExp2(new THREE.Color('#102850'), 0.012)
+    const fog = new THREE.FogExp2(new THREE.Color('#102850'), 0.015)
     scene.fog = fog
     fogRef.current = fog
     return () => { scene.fog = null; scene.background = null }
@@ -139,24 +139,21 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
     qEnd.current.copy(ABYSS_Q[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
 
-    // Exponential darkness: near-black (~0.94) by t=0.3, pure black at t=0.5
-    // Curve: 1 - (1-x)³  where x = clamp(t / 0.5, 0, 1)
-    const x = Math.min(1, t / 0.5)
-    const darkFactor = 1 - Math.pow(1 - x, 3)
+    // Dynamic background — exponential curve: ~96% black by t=0.3, pure black by t=0.45
+    const darkT = 1 - Math.pow(Math.max(0, 1 - t / 0.45), 3)
+    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkT)
 
-    // Dynamic background — light navy at surface → pure black at bottom
-    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkFactor)
-
-    // Dynamic fog color + density
+    // Dynamic fog — ramp up aggressively in first 30% of scroll, then hold at max
     if (fogRef.current) {
-      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkFactor)
-      const targetDensity = THREE.MathUtils.lerp(0.012, 0.1, darkFactor)
+      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkT)
+      const fogT        = Math.min(1, Math.pow(t / 0.3, 0.6))
+      const targetDensity = THREE.MathUtils.lerp(0.015, 0.14, fogT)
       fogRef.current.density = THREE.MathUtils.damp(fogRef.current.density, targetDensity, 2, delta)
     }
 
-    // Dynamic ambient — near-zero by progress 0.3, zero in the abyss
+    // Dynamic ambient — quadratic drop, gone completely by t=0.25
     if (ambientRef.current) {
-      ambientRef.current.intensity = 0.18 * (1 - darkFactor)
+      ambientRef.current.intensity = 0.18 * Math.pow(Math.max(0, 1 - t / 0.25), 2)
     }
   })
 
