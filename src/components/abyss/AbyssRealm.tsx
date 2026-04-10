@@ -10,11 +10,23 @@ const DEPTH_THRESHOLDS = [0.33, 0.66]
 
 const DEPTH_LABELS = ['Twilight Zone', 'Midnight Zone', 'The Abyss'] as const
 
+const DEPTH_MARKERS = [
+  { depth: 0,    label: '0m'    },
+  { depth: 200,  label: '200m'  },
+  { depth: 500,  label: '500m'  },
+  { depth: 1000, label: '1000m' },
+  { depth: 2000, label: '2000m' },
+  { depth: 5000, label: '5000m' },
+] as const
+
+const LOG_MAX = Math.log10(5001)
+const logPos = (depth: number) => Math.log10(depth + 1) / LOG_MAX
+
 export function AbyssRealm() {
   const sectionRef    = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible]       = useState(false)
   const [currentDepth, setCurrentDepth] = useState<1 | 2 | 3>(1)
-  const [hoveredDepth, setHoveredDepth] = useState<1 | 2 | 3 | null>(null)
+  const [progress, setProgress]         = useState(0)
   const progressRef = useRef(0)
 
   // Mount/unmount canvas when section enters/leaves viewport
@@ -40,6 +52,7 @@ export function AbyssRealm() {
       if (scrollable <= 0) { progressRef.current = 0; return }
       const p = Math.max(0, Math.min(1, -rect.top / scrollable))
       progressRef.current = p
+      setProgress(p)
       setCurrentDepth(p < DEPTH_THRESHOLDS[0] ? 1 : p < DEPTH_THRESHOLDS[1] ? 2 : 3)
     }
 
@@ -47,15 +60,6 @@ export function AbyssRealm() {
     window.addEventListener('scroll', update, { passive: true })
     return () => window.removeEventListener('scroll', update)
   }, [])
-
-  const jumpToDepth = (depth: 1 | 2 | 3) => {
-    const el = sectionRef.current
-    if (!el) return
-    const sectionTop = el.getBoundingClientRect().top + window.scrollY
-    const scrollable = el.offsetHeight - window.innerHeight
-    const progress = depth === 1 ? 0 : depth === 2 ? DEPTH_THRESHOLDS[0] : DEPTH_THRESHOLDS[1]
-    window.scrollTo({ top: sectionTop + progress * scrollable, behavior: 'smooth' })
-  }
 
   return (
     <div ref={sectionRef} style={{ position: 'relative', height: '800vh' }}>
@@ -162,53 +166,99 @@ export function AbyssRealm() {
           </div>
         )}
 
-        {/* Teal depth nav dots */}
+        {/* Depth gauge */}
         {isVisible && (
           <div
             style={{
               position: 'absolute',
-              right: '1.5vw',
+              right: '2vw',
               top: '50%',
               transform: 'translateY(-50%)',
+              zIndex: 50,
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              gap: '18px',
-              zIndex: 50,
+              alignItems: 'flex-end',
+              gap: '12px',
             }}
           >
-            {([1, 2, 3] as const).map((depth) => {
-              const active  = currentDepth === depth
-              const hovered = hoveredDepth === depth
-              return (
-                <button
+            {/* Large depth readout */}
+            <div
+              style={{
+                fontFamily: 'var(--font-sofia-condensed)',
+                color: '#00c8b4',
+                textAlign: 'right',
+                lineHeight: 1,
+              }}
+            >
+              <div style={{ fontSize: '2.2rem', fontWeight: 700, letterSpacing: '0.04em' }}>
+                {Math.round(progress * 5000).toLocaleString()}
+              </div>
+              <div style={{ fontSize: '9px', letterSpacing: '0.4em', opacity: 0.45, textTransform: 'uppercase' }}>
+                meters
+              </div>
+            </div>
+
+            {/* Gauge */}
+            <div style={{ position: 'relative', height: '50vh', width: '72px' }}>
+              {/* Thin vertical line */}
+              <div
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: '1.5px',
+                  background:
+                    'linear-gradient(to bottom, rgba(0,200,180,0.08), rgba(0,200,180,0.35), rgba(0,200,180,0.08))',
+                }}
+              />
+
+              {/* Depth markers */}
+              {DEPTH_MARKERS.map(({ depth, label }) => (
+                <div
                   key={depth}
-                  onClick={() => jumpToDepth(depth)}
-                  onMouseEnter={() => setHoveredDepth(depth)}
-                  onMouseLeave={() => setHoveredDepth(null)}
-                  aria-label={`Jump to ${DEPTH_LABELS[depth - 1]}`}
                   style={{
-                    width: '10px',
-                    height: '10px',
-                    borderRadius: '50%',
-                    border: `1.5px solid ${
-                      active  ? '#00c8b4'
-                      : hovered ? 'rgba(0,200,180,0.6)'
-                      : 'rgba(0,200,180,0.22)'
-                    }`,
-                    background: active ? '#00c8b4' : 'transparent',
-                    cursor: 'pointer',
-                    padding: 0,
-                    boxShadow: active
-                      ? '0 0 12px rgba(0,200,180,0.95), 0 0 26px rgba(0,200,180,0.40)'
-                      : hovered
-                      ? '0 0 8px rgba(0,200,180,0.50)'
-                      : 'none',
-                    transition: 'all 0.3s ease',
+                    position: 'absolute',
+                    right: '8px',
+                    top: `${logPos(depth) * 100}%`,
+                    transform: 'translateY(-50%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
                   }}
-                />
-              )
-            })}
+                >
+                  <span
+                    style={{
+                      fontSize: '8px',
+                      letterSpacing: '0.08em',
+                      color: 'rgba(0,200,180,0.45)',
+                      fontFamily: 'var(--font-sofia-condensed)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {label}
+                  </span>
+                  <div style={{ width: '6px', height: '1px', background: 'rgba(0,200,180,0.3)' }} />
+                </div>
+              ))}
+
+              {/* Glowing indicator */}
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '-4px',
+                  top: `${logPos(progress * 5000) * 100}%`,
+                  transform: 'translateY(-50%)',
+                  width: '9px',
+                  height: '9px',
+                  borderRadius: '50%',
+                  background: '#00c8b4',
+                  boxShadow:
+                    '0 0 8px rgba(0,200,180,1), 0 0 20px rgba(0,200,180,0.7), 0 0 40px rgba(0,200,180,0.35)',
+                  transition: 'top 0.15s ease-out',
+                }}
+              />
+            </div>
           </div>
         )}
       </div>

@@ -63,6 +63,7 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
   const qStart = useRef(new THREE.Quaternion())
   const qEnd   = useRef(new THREE.Quaternion())
   const fogRef = useRef<THREE.FogExp2 | null>(null)
+  const ambientRef = useRef<THREE.AmbientLight>(null!)
 
   useEffect(() => {
     const bg = new THREE.Color('#0a1628')
@@ -87,16 +88,22 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
     qEnd.current.copy(ABYSS_Q[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
 
-    // Fog thickens as camera descends deeper
+    // Darkness and fog deepen dramatically — near-total black at the abyss
+    if (ambientRef.current) {
+      const targetIntensity = THREE.MathUtils.lerp(0.08, 0.01, t)
+      ambientRef.current.intensity = THREE.MathUtils.damp(
+        ambientRef.current.intensity, targetIntensity, 2, delta
+      )
+    }
     if (fogRef.current) {
-      const targetDensity = THREE.MathUtils.lerp(0.018, 0.038, t)
+      const targetDensity = THREE.MathUtils.lerp(0.018, 0.06, t)
       fogRef.current.density = THREE.MathUtils.damp(fogRef.current.density, targetDensity, 2, delta)
     }
   })
 
   return (
     <>
-      <ambientLight intensity={0.04} color="#002233" />
+      <ambientLight ref={ambientRef} intensity={0.08} color="#002233" />
 
       {/* Tier 1 — Twilight Zone lights */}
       <pointLight position={[-3, -10,  -2]} intensity={3.5} color="#00c8b4" distance={20} decay={2}   />
