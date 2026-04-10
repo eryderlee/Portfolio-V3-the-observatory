@@ -70,11 +70,11 @@ function LightRays({ progressRef }: { progressRef: React.MutableRefObject<number
 
   useFrame(() => {
     const t   = progressRef.current
-    // Fully visible at surface, gone by t=0.45
-    const base = Math.max(0, 1 - t / 0.45)
-    if (mat0Ref.current) mat0Ref.current.opacity = 0.13 * base
-    if (mat1Ref.current) mat1Ref.current.opacity = 0.10 * base
-    if (mat2Ref.current) mat2Ref.current.opacity = 0.08 * base
+    // Visible only in first 10% of scroll, then gone
+    const base = Math.max(0, 1 - t / 0.10)
+    if (mat0Ref.current) mat0Ref.current.opacity = 0.08 * base
+    if (mat1Ref.current) mat1Ref.current.opacity = 0.06 * base
+    if (mat2Ref.current) mat2Ref.current.opacity = 0.05 * base
   })
 
   // Cone center at Y = 20 - height/2 so apex sits at Y=20
@@ -133,19 +133,20 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
     qEnd.current.copy(ABYSS_Q[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
 
-    // Dynamic background — light navy at surface → pure black at bottom
-    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, t)
+    // Dynamic background — exponential curve, fully black by ~t=0.4
+    const darknessT = Math.min(1, Math.pow(t / 0.4, 2))
+    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, darknessT)
 
-    // Dynamic fog color + density
+    // Dynamic fog color + density — follows same exponential curve
     if (fogRef.current) {
-      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, t)
-      const targetDensity = THREE.MathUtils.lerp(0.015, 0.09, t)
+      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, darknessT)
+      const targetDensity = THREE.MathUtils.lerp(0.015, 0.09, darknessT)
       fogRef.current.density = THREE.MathUtils.damp(fogRef.current.density, targetDensity, 2, delta)
     }
 
-    // Dynamic ambient — bright at surface (0.18), zero in the abyss
+    // Dynamic ambient — drops off fast with exponential curve
     if (ambientRef.current) {
-      ambientRef.current.intensity = THREE.MathUtils.lerp(0.18, 0.0, t)
+      ambientRef.current.intensity = THREE.MathUtils.lerp(0.18, 0.0, darknessT)
     }
   })
 
