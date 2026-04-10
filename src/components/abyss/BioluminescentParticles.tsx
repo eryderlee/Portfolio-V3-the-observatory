@@ -13,14 +13,14 @@ const VERT = /* glsl */ `
   void main() {
     vec3 pos = position;
 
-    // Layered sine waves — slow, dreamlike drift suspended in heavy water
-    float driftX = sin(uTime * aSpeed * 0.50 + aOffset)        * 0.18
-                 + sin(uTime * aSpeed * 0.35 + aOffset * 1.37) * 0.10
-                 + sin(uTime * aSpeed * 0.19 + aOffset * 2.14) * 0.05;
-    float driftY = cos(uTime * aSpeed * 0.26 + aOffset * 0.92) * 0.14
-                 + cos(uTime * aSpeed * 0.14 + aOffset * 1.68) * 0.08;
-    float driftZ = sin(uTime * aSpeed * 0.31 + aOffset * 0.61) * 0.15
-                 + sin(uTime * aSpeed * 0.22 + aOffset * 1.22) * 0.07;
+    // Layered sine waves — very slow, heavy-water drift; freq/amplitude halved for lazier feel
+    float driftX = sin(uTime * aSpeed * 0.25 + aOffset)        * 0.09
+                 + sin(uTime * aSpeed * 0.18 + aOffset * 1.37) * 0.05
+                 + sin(uTime * aSpeed * 0.10 + aOffset * 2.14) * 0.025;
+    float driftY = cos(uTime * aSpeed * 0.13 + aOffset * 0.92) * 0.07
+                 + cos(uTime * aSpeed * 0.07 + aOffset * 1.68) * 0.04;
+    float driftZ = sin(uTime * aSpeed * 0.16 + aOffset * 0.61) * 0.08
+                 + sin(uTime * aSpeed * 0.11 + aOffset * 1.22) * 0.035;
 
     pos.x += driftX;
     pos.y += driftY;
