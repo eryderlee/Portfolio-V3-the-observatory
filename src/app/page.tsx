@@ -4,6 +4,7 @@ import { Observatory } from '@/components/observatory/Observatory'
 import { SceneWrapper } from '@/components/three/SceneWrapper'
 import { ThresholdPrompt } from '@/components/ui/ThresholdPrompt'
 import { CelestialRealm } from '@/components/celestial/CelestialRealm'
+import { AbyssRealm } from '@/components/abyss/AbyssRealm'
 import { DIMENSIONS } from '@/lib/constants'
 
 export default function Home() {
@@ -33,7 +34,9 @@ export default function Home() {
               description={dim.description}
               dimensionId={dim.id}
             />
-            {dim.id === 'celestial' ? <CelestialRealm /> : <div className="min-h-[200vh]" />}
+            {dim.id === 'celestial' ? <CelestialRealm />
+              : dim.id === 'abyss' ? <AbyssRealm />
+              : <div className="min-h-[200vh]" />}
           </section>
         ))}
       </main>
