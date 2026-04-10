@@ -60,42 +60,48 @@ const SURFACE_COLOR = new THREE.Color('#102850')
 const DEEP_COLOR    = new THREE.Color('#000000')
 
 // ---------------------------------------------------------------------------
-// Light rays — cones from above simulating sunlight filtering through water
-// Apex at Y=20, widening downward; fade out by mid-depth
+// Light rays — thin plane shafts simulating surface light; gone by t=0.1
 // ---------------------------------------------------------------------------
 function LightRays({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
-  const mat0Ref = useRef<THREE.MeshBasicMaterial>(null)
-  const mat1Ref = useRef<THREE.MeshBasicMaterial>(null)
-  const mat2Ref = useRef<THREE.MeshBasicMaterial>(null)
+  const groupRef = useRef<THREE.Group>(null)
+  const mat0Ref  = useRef<THREE.MeshBasicMaterial>(null)
+  const mat1Ref  = useRef<THREE.MeshBasicMaterial>(null)
+  const mat2Ref  = useRef<THREE.MeshBasicMaterial>(null)
+  const mat3Ref  = useRef<THREE.MeshBasicMaterial>(null)
 
   useFrame(() => {
-    const t   = progressRef.current
-    // Fully visible at surface, gone by t=0.45
-    const base = Math.max(0, 1 - t / 0.45)
-    if (mat0Ref.current) mat0Ref.current.opacity = 0.13 * base
-    if (mat1Ref.current) mat1Ref.current.opacity = 0.10 * base
+    const t    = progressRef.current
+    const base = Math.max(0, 1 - t / 0.1)
+    if (mat0Ref.current) mat0Ref.current.opacity = 0.07 * base
+    if (mat1Ref.current) mat1Ref.current.opacity = 0.06 * base
     if (mat2Ref.current) mat2Ref.current.opacity = 0.08 * base
+    if (mat3Ref.current) mat3Ref.current.opacity = 0.05 * base
+    if (groupRef.current) groupRef.current.visible = base > 0
   })
 
-  // Cone center at Y = 20 - height/2 so apex sits at Y=20
   return (
-    <>
-      <mesh position={[-4, 5, -3]}>
-        <coneGeometry args={[2.8, 30, 5, 1, true]} />
-        <meshBasicMaterial ref={mat0Ref} color="#4488cc" transparent opacity={0.13}
+    <group ref={groupRef}>
+      <mesh position={[-3, 5, -2]} rotation={[0, 0.3, 0]}>
+        <planeGeometry args={[0.8, 40]} />
+        <meshBasicMaterial ref={mat0Ref} color="#88bbee" transparent opacity={0.07}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[3, 5, -5]}>
-        <coneGeometry args={[2.2, 28, 5, 1, true]} />
-        <meshBasicMaterial ref={mat1Ref} color="#4488cc" transparent opacity={0.10}
+      <mesh position={[2, 6, -4]} rotation={[0, -0.4, 0]}>
+        <planeGeometry args={[1.0, 38]} />
+        <meshBasicMaterial ref={mat1Ref} color="#88bbee" transparent opacity={0.06}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[6, 4, -1]}>
-        <coneGeometry args={[1.8, 24, 5, 1, true]} />
-        <meshBasicMaterial ref={mat2Ref} color="#3377bb" transparent opacity={0.08}
+      <mesh position={[-6, 4, -6]} rotation={[0, 0.1, 0]}>
+        <planeGeometry args={[0.6, 35]} />
+        <meshBasicMaterial ref={mat2Ref} color="#88bbee" transparent opacity={0.08}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-    </>
+      <mesh position={[5, 5, -3]} rotation={[0, -0.2, 0]}>
+        <planeGeometry args={[0.7, 36]} />
+        <meshBasicMaterial ref={mat3Ref} color="#99ccff" transparent opacity={0.05}
+          blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
   )
 }
 
@@ -133,19 +139,21 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
     qEnd.current.copy(ABYSS_Q[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
 
-    // Dynamic background — light navy at surface → pure black at bottom
-    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, t)
+    // Dynamic background — exponential curve: ~96% black by t=0.3, pure black by t=0.45
+    const darkT = 1 - Math.pow(Math.max(0, 1 - t / 0.45), 3)
+    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkT)
 
-    // Dynamic fog color + density
+    // Dynamic fog — ramp up aggressively in first 30% of scroll, then hold at max
     if (fogRef.current) {
-      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, t)
-      const targetDensity = THREE.MathUtils.lerp(0.015, 0.09, t)
+      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkT)
+      const fogT        = Math.min(1, Math.pow(t / 0.3, 0.6))
+      const targetDensity = THREE.MathUtils.lerp(0.015, 0.14, fogT)
       fogRef.current.density = THREE.MathUtils.damp(fogRef.current.density, targetDensity, 2, delta)
     }
 
-    // Dynamic ambient — bright at surface (0.18), zero in the abyss
+    // Dynamic ambient — quadratic drop, gone completely by t=0.25
     if (ambientRef.current) {
-      ambientRef.current.intensity = THREE.MathUtils.lerp(0.18, 0.0, t)
+      ambientRef.current.intensity = 0.18 * Math.pow(Math.max(0, 1 - t / 0.25), 2)
     }
   })
 
