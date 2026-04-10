@@ -55,19 +55,65 @@ function buildAbyssPath(): {
 
 const { curve: ABYSS_CURVE, quaternions: ABYSS_Q } = buildAbyssPath()
 
+// Color constants for dynamic lerp — never mutated
+const SURFACE_COLOR = new THREE.Color('#102850')
+const DEEP_COLOR    = new THREE.Color('#000000')
+
+// ---------------------------------------------------------------------------
+// Light rays — cones from above simulating sunlight filtering through water
+// Apex at Y=20, widening downward; fade out by mid-depth
+// ---------------------------------------------------------------------------
+function LightRays({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
+  const mat0Ref = useRef<THREE.MeshBasicMaterial>(null)
+  const mat1Ref = useRef<THREE.MeshBasicMaterial>(null)
+  const mat2Ref = useRef<THREE.MeshBasicMaterial>(null)
+
+  useFrame(() => {
+    const t   = progressRef.current
+    // Fully visible at surface, gone by t=0.45
+    const base = Math.max(0, 1 - t / 0.45)
+    if (mat0Ref.current) mat0Ref.current.opacity = 0.13 * base
+    if (mat1Ref.current) mat1Ref.current.opacity = 0.10 * base
+    if (mat2Ref.current) mat2Ref.current.opacity = 0.08 * base
+  })
+
+  // Cone center at Y = 20 - height/2 so apex sits at Y=20
+  return (
+    <>
+      <mesh position={[-4, 5, -3]}>
+        <coneGeometry args={[2.8, 30, 5, 1, true]} />
+        <meshBasicMaterial ref={mat0Ref} color="#4488cc" transparent opacity={0.13}
+          blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[3, 5, -5]}>
+        <coneGeometry args={[2.2, 28, 5, 1, true]} />
+        <meshBasicMaterial ref={mat1Ref} color="#4488cc" transparent opacity={0.10}
+          blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[6, 4, -1]}>
+        <coneGeometry args={[1.8, 24, 5, 1, true]} />
+        <meshBasicMaterial ref={mat2Ref} color="#3377bb" transparent opacity={0.08}
+          blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+    </>
+  )
+}
+
 // ---------------------------------------------------------------------------
 
 function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   const { camera, scene } = useThree()
   const smoothProgress = useRef(0)
-  const qStart = useRef(new THREE.Quaternion())
-  const qEnd   = useRef(new THREE.Quaternion())
-  const fogRef = useRef<THREE.FogExp2 | null>(null)
+  const qStart     = useRef(new THREE.Quaternion())
+  const qEnd       = useRef(new THREE.Quaternion())
+  const fogRef     = useRef<THREE.FogExp2 | null>(null)
+  const ambientRef = useRef<THREE.AmbientLight>(null)
+  // bgColor is mutated in-place each frame; scene.background holds the same reference
+  const bgColor    = useRef(new THREE.Color('#102850'))
 
   useEffect(() => {
-    const bg = new THREE.Color('#0a1628')
-    scene.background = bg
-    const fog = new THREE.FogExp2(new THREE.Color('#050d1a'), 0.022)
+    scene.background = bgColor.current
+    const fog = new THREE.FogExp2(new THREE.Color('#102850'), 0.015)
     scene.fog = fog
     fogRef.current = fog
     return () => { scene.fog = null; scene.background = null }
@@ -87,16 +133,28 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
     qEnd.current.copy(ABYSS_Q[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
 
-    // Fog thickens as camera descends deeper
+    // Dynamic background — light navy at surface → pure black at bottom
+    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, t)
+
+    // Dynamic fog color + density
     if (fogRef.current) {
-      const targetDensity = THREE.MathUtils.lerp(0.018, 0.038, t)
+      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, t)
+      const targetDensity = THREE.MathUtils.lerp(0.015, 0.09, t)
       fogRef.current.density = THREE.MathUtils.damp(fogRef.current.density, targetDensity, 2, delta)
+    }
+
+    // Dynamic ambient — bright at surface (0.18), zero in the abyss
+    if (ambientRef.current) {
+      ambientRef.current.intensity = THREE.MathUtils.lerp(0.18, 0.0, t)
     }
   })
 
   return (
     <>
-      <ambientLight intensity={0.04} color="#002233" />
+      <ambientLight ref={ambientRef} intensity={0.18} color="#8ab4d4" />
+
+      {/* Light rays from above — surface only, fade by mid-depth */}
+      <LightRays progressRef={progressRef} />
 
       {/* Tier 1 — Twilight Zone lights */}
       <pointLight position={[-3, -10,  -2]} intensity={3.5} color="#00c8b4" distance={20} decay={2}   />
@@ -108,10 +166,22 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
       <pointLight position={[-3, -38, -13]} intensity={4.5} color="#00b4a0" distance={24} decay={2}   />
       <pointLight position={[ 4, -44, -17]} intensity={4.5} color="#00c8b4" distance={26} decay={1.8} />
 
-      {/* Tier 3 — The Abyss lights — eerie, brighter bioluminescence */}
+      {/* Tier 3 — The Abyss lights — eerie bioluminescence */}
       <pointLight position={[-4, -52, -10]} intensity={7.0} color="#00d0c0" distance={34} decay={1.5} />
       <pointLight position={[ 3, -60, -15]} intensity={6.0} color="#009080" distance={28} decay={1.8} />
       <pointLight position={[ 0, -68, -19]} intensity={8.0} color="#00c8b4" distance={38} decay={1.5} />
+
+      {/* Deep void — faint ancient glow far below, barely visible through the abyss */}
+      <mesh position={[15, -82, -32]}>
+        <sphereGeometry args={[10, 8, 6]} />
+        <meshBasicMaterial color="#006688" transparent opacity={0.18}
+          blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+      <mesh position={[-12, -86, -28]}>
+        <sphereGeometry args={[7, 8, 6]} />
+        <meshBasicMaterial color="#004422" transparent opacity={0.14}
+          blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
 
       {/* Tier 1 particles — sparse, dim */}
       <BioluminescentParticles
@@ -129,12 +199,14 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
         intensity={0.85}
       />
 
-      {/* Tier 3 particles — densest, most vivid */}
+      {/* Tier 3 particles — fade out in deepest 20% with rare flickers */}
       <BioluminescentParticles
         count={175}
         spread={[30, 22, 24]}
         position={[0, -62, -17]}
         intensity={1.2}
+        progressRef={progressRef}
+        depthFadeStart={0.8}
       />
 
       <EffectComposer>
@@ -155,7 +227,7 @@ export default function AbyssScene({ progressRef }: { progressRef: React.Mutable
         powerPreference: 'high-performance',
         preserveDrawingBuffer: true,
       }}
-      style={{ background: '#0a1628' }}
+      style={{ background: '#102850' }}
     >
       <Suspense fallback={null}>
         <AbyssSceneContent progressRef={progressRef} />

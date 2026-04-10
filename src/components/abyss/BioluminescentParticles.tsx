@@ -13,14 +13,14 @@ const VERT = /* glsl */ `
   void main() {
     vec3 pos = position;
 
-    // Layered sine waves — organic bioluminescent drift
-    float driftX = sin(uTime * aSpeed        + aOffset)        * 0.45
-                 + sin(uTime * aSpeed * 0.71 + aOffset * 1.37) * 0.25
-                 + sin(uTime * aSpeed * 0.38 + aOffset * 2.14) * 0.12;
-    float driftY = cos(uTime * aSpeed * 0.53 + aOffset * 0.92) * 0.35
-                 + cos(uTime * aSpeed * 0.29 + aOffset * 1.68) * 0.20;
-    float driftZ = sin(uTime * aSpeed * 0.63 + aOffset * 0.61) * 0.38
-                 + sin(uTime * aSpeed * 0.44 + aOffset * 1.22) * 0.18;
+    // Layered sine waves — slow, dreamlike drift suspended in heavy water
+    float driftX = sin(uTime * aSpeed * 0.50 + aOffset)        * 0.18
+                 + sin(uTime * aSpeed * 0.35 + aOffset * 1.37) * 0.10
+                 + sin(uTime * aSpeed * 0.19 + aOffset * 2.14) * 0.05;
+    float driftY = cos(uTime * aSpeed * 0.26 + aOffset * 0.92) * 0.14
+                 + cos(uTime * aSpeed * 0.14 + aOffset * 1.68) * 0.08;
+    float driftZ = sin(uTime * aSpeed * 0.31 + aOffset * 0.61) * 0.15
+                 + sin(uTime * aSpeed * 0.22 + aOffset * 1.22) * 0.07;
 
     pos.x += driftX;
     pos.y += driftY;
@@ -37,6 +37,7 @@ const VERT = /* glsl */ `
 const FRAG = /* glsl */ `
   uniform vec3  uColor;
   uniform float uTime;
+  uniform float uOpacity;
 
   void main() {
     vec2 uv = gl_PointCoord - 0.5;
@@ -47,27 +48,31 @@ const FRAG = /* glsl */ `
     float alpha = 1.0 - smoothstep(0.0, 0.5, r);
     alpha *= alpha;
 
-    // Subtle per-particle pulse from screen position
-    float pulse = 0.72 + 0.28 * sin(uTime * 1.6 + gl_FragCoord.x * 0.04 + gl_FragCoord.y * 0.06);
+    // Gentle pulse — slower and lazier than before
+    float pulse = 0.72 + 0.28 * sin(uTime * 0.5 + gl_FragCoord.x * 0.04 + gl_FragCoord.y * 0.06);
 
-    gl_FragColor = vec4(uColor, alpha * pulse);
+    gl_FragColor = vec4(uColor, alpha * pulse * uOpacity);
   }
 `
 
 interface BioluminescentParticlesProps {
-  count?:     number
-  spread?:    [number, number, number]
-  position?:  [number, number, number]
-  baseColor?: string
-  intensity?: number
+  count?:          number
+  spread?:         [number, number, number]
+  position?:       [number, number, number]
+  baseColor?:      string
+  intensity?:      number
+  progressRef?:    React.MutableRefObject<number>
+  depthFadeStart?: number
 }
 
 export function BioluminescentParticles({
-  count     = 500,
-  spread    = [20, 15, 20],
-  position  = [0, 0, 0],
-  baseColor = '#00c8b4',
-  intensity = 1.0,
+  count          = 500,
+  spread         = [20, 15, 20],
+  position       = [0, 0, 0],
+  baseColor      = '#00c8b4',
+  intensity      = 1.0,
+  progressRef,
+  depthFadeStart,
 }: BioluminescentParticlesProps) {
   const matRef = useRef<THREE.ShaderMaterial>(null)
 
@@ -83,7 +88,8 @@ export function BioluminescentParticles({
       pos[i * 3 + 1] = (Math.random() - 0.5) * spread[1]
       pos[i * 3 + 2] = (Math.random() - 0.5) * spread[2]
       offset[i]      = Math.random() * Math.PI * 2
-      speed[i]       = 0.22 + Math.random() * 0.52
+      // Significantly slower — lazy, dreamlike drift
+      speed[i]       = 0.08 + Math.random() * 0.22
       size[i]        = 2.2 + Math.random() * 5.8
     }
 
@@ -96,8 +102,9 @@ export function BioluminescentParticles({
       vertexShader:   VERT,
       fragmentShader: FRAG,
       uniforms: {
-        uTime:  { value: 0 },
-        uColor: { value: new THREE.Color(baseColor) },
+        uTime:    { value: 0 },
+        uColor:   { value: new THREE.Color(baseColor) },
+        uOpacity: { value: 1.0 },
       },
       blending:    THREE.AdditiveBlending,
       depthWrite:  false,
@@ -110,6 +117,19 @@ export function BioluminescentParticles({
   useFrame(({ clock }) => {
     if (matRef.current) {
       matRef.current.uniforms.uTime.value = clock.getElapsedTime() * intensity
+
+      if (progressRef !== undefined && depthFadeStart !== undefined) {
+        const p = progressRef.current
+        if (p > depthFadeStart) {
+          const normalizedDepth = (p - depthFadeStart) / (1.0 - depthFadeStart)
+          const fade = 1.0 - normalizedDepth
+          // Rare flicker — like something briefly illuminated far below
+          const flicker = Math.random() < 0.004 ? 0.4 * normalizedDepth : 0
+          matRef.current.uniforms.uOpacity.value = Math.max(0, fade) + flicker
+        } else {
+          matRef.current.uniforms.uOpacity.value = 1.0
+        }
+      }
     }
   })
 
