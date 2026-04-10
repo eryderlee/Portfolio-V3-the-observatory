@@ -139,8 +139,10 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
     qEnd.current.copy(ABYSS_Q[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
 
-    // Exponential darkness — drops fast early, near-black by progress 0.3
-    const darkFactor = Math.pow(t, 0.4)
+    // Exponential darkness: near-black (~0.94) by t=0.3, pure black at t=0.5
+    // Curve: 1 - (1-x)³  where x = clamp(t / 0.5, 0, 1)
+    const x = Math.min(1, t / 0.5)
+    const darkFactor = 1 - Math.pow(1 - x, 3)
 
     // Dynamic background — light navy at surface → pure black at bottom
     bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkFactor)
