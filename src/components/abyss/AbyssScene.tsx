@@ -60,39 +60,45 @@ const SURFACE_COLOR = new THREE.Color('#102850')
 const DEEP_COLOR    = new THREE.Color('#000000')
 
 // ---------------------------------------------------------------------------
-// Light rays — cones from above simulating sunlight filtering through water
-// Apex at Y=20, widening downward; fade out by mid-depth
+// Light rays — thin planes simulating sunlight shafts filtering through water
+// Only visible near surface; fade to invisible by progress 0.1
 // ---------------------------------------------------------------------------
 function LightRays({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   const mat0Ref = useRef<THREE.MeshBasicMaterial>(null)
   const mat1Ref = useRef<THREE.MeshBasicMaterial>(null)
   const mat2Ref = useRef<THREE.MeshBasicMaterial>(null)
+  const mat3Ref = useRef<THREE.MeshBasicMaterial>(null)
 
   useFrame(() => {
-    const t   = progressRef.current
-    // Fully visible at surface, gone by t=0.45
-    const base = Math.max(0, 1 - t / 0.45)
-    if (mat0Ref.current) mat0Ref.current.opacity = 0.13 * base
-    if (mat1Ref.current) mat1Ref.current.opacity = 0.10 * base
-    if (mat2Ref.current) mat2Ref.current.opacity = 0.08 * base
+    const t    = progressRef.current
+    // Gone by progress 0.1 (first ~100m)
+    const base = Math.max(0, 1 - t / 0.1)
+    if (mat0Ref.current) mat0Ref.current.opacity = 0.06 * base
+    if (mat1Ref.current) mat1Ref.current.opacity = 0.06 * base
+    if (mat2Ref.current) mat2Ref.current.opacity = 0.05 * base
+    if (mat3Ref.current) mat3Ref.current.opacity = 0.04 * base
   })
 
-  // Cone center at Y = 20 - height/2 so apex sits at Y=20
   return (
     <>
-      <mesh position={[-4, 5, -3]}>
-        <coneGeometry args={[2.8, 30, 5, 1, true]} />
-        <meshBasicMaterial ref={mat0Ref} color="#4488cc" transparent opacity={0.13}
+      <mesh position={[-4, 2, -3]} rotation={[0, 0.15, 0]}>
+        <planeGeometry args={[0.5, 28]} />
+        <meshBasicMaterial ref={mat0Ref} color="#88bbdd" transparent opacity={0.06}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[3, 5, -5]}>
-        <coneGeometry args={[2.2, 28, 5, 1, true]} />
-        <meshBasicMaterial ref={mat1Ref} color="#4488cc" transparent opacity={0.10}
+      <mesh position={[3, 1, -5]} rotation={[0, -0.2, 0]}>
+        <planeGeometry args={[0.4, 26]} />
+        <meshBasicMaterial ref={mat1Ref} color="#6699cc" transparent opacity={0.06}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
-      <mesh position={[6, 4, -1]}>
-        <coneGeometry args={[1.8, 24, 5, 1, true]} />
-        <meshBasicMaterial ref={mat2Ref} color="#3377bb" transparent opacity={0.08}
+      <mesh position={[6, 3, -1]} rotation={[0, 0.1, 0]}>
+        <planeGeometry args={[0.35, 22]} />
+        <meshBasicMaterial ref={mat2Ref} color="#88bbdd" transparent opacity={0.05}
+          blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[-1, 4, -6]} rotation={[0, -0.08, 0]}>
+        <planeGeometry args={[0.3, 24]} />
+        <meshBasicMaterial ref={mat3Ref} color="#99ccee" transparent opacity={0.04}
           blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
       </mesh>
     </>
@@ -113,7 +119,7 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
 
   useEffect(() => {
     scene.background = bgColor.current
-    const fog = new THREE.FogExp2(new THREE.Color('#102850'), 0.015)
+    const fog = new THREE.FogExp2(new THREE.Color('#102850'), 0.012)
     scene.fog = fog
     fogRef.current = fog
     return () => { scene.fog = null; scene.background = null }
@@ -133,19 +139,22 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
     qEnd.current.copy(ABYSS_Q[segIdx + 1])
     camera.quaternion.slerpQuaternions(qStart.current, qEnd.current, segT)
 
+    // Exponential darkness — drops fast early, near-black by progress 0.3
+    const darkFactor = Math.pow(t, 0.4)
+
     // Dynamic background — light navy at surface → pure black at bottom
-    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, t)
+    bgColor.current.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkFactor)
 
     // Dynamic fog color + density
     if (fogRef.current) {
-      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, t)
-      const targetDensity = THREE.MathUtils.lerp(0.015, 0.09, t)
+      fogRef.current.color.lerpColors(SURFACE_COLOR, DEEP_COLOR, darkFactor)
+      const targetDensity = THREE.MathUtils.lerp(0.012, 0.1, darkFactor)
       fogRef.current.density = THREE.MathUtils.damp(fogRef.current.density, targetDensity, 2, delta)
     }
 
-    // Dynamic ambient — bright at surface (0.18), zero in the abyss
+    // Dynamic ambient — near-zero by progress 0.3, zero in the abyss
     if (ambientRef.current) {
-      ambientRef.current.intensity = THREE.MathUtils.lerp(0.18, 0.0, t)
+      ambientRef.current.intensity = 0.18 * (1 - darkFactor)
     }
   })
 
