@@ -5,7 +5,9 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { BioluminescentParticles } from './BioluminescentParticles'
-import { Bubbles } from './Bubbles'
+import { Bubbles }                              from './Bubbles'
+import { WorkflowOrganism }                     from './WorkflowOrganism'
+import { WORKFLOW_GRAPHS, WORKFLOW_PLACEMENTS } from './workflowData'
 
 // ---------------------------------------------------------------------------
 // Camera path — descends from surface through 3 depth tiers
@@ -317,6 +319,16 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
         progressRef={progressRef}
         depthFadeStart={0.8}
       />
+
+      {/* ── Workflow organisms — n8n graphs rendered as bioluminescent networks */}
+      {WORKFLOW_GRAPHS.map((graph, i) => (
+        <WorkflowOrganism
+          key={graph.name}
+          graph={graph}
+          position={WORKFLOW_PLACEMENTS[i].position}
+          scale={WORKFLOW_PLACEMENTS[i].scale}
+        />
+      ))}
 
       <EffectComposer>
         <Bloom luminanceThreshold={0.12} luminanceSmoothing={0.85} intensity={2.0} mipmapBlur />
