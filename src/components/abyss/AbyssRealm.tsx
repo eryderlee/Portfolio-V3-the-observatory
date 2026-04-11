@@ -78,40 +78,34 @@ export function AbyssRealm() {
           {isVisible && <AbyssScene progressRef={progressRef} />}
         </div>
 
-        {/* Entrance ripples — expanding radial rings with blur pulse */}
+        {/* Water surface distortion — soft layered gradients, no hard edges */}
         {isVisible && (
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '58%',
-              width: '60vw',
-              height: '28vw',
-              transform: 'translate(-50%, -50%)',
-              pointerEvents: 'none',
-              zIndex: 5,
-            }}
-          >
-            {([0, 0.38, 0.76] as number[]).map((delay, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: '50%',
-                  background: `radial-gradient(ellipse at center,
-                    rgba(0,200,180,${0.11 - i * 0.025}) 0%,
-                    rgba(0,160,148,${0.06 - i * 0.015}) 42%,
-                    transparent 68%)`,
-                  animation: `abyss-ripple 2.9s cubic-bezier(0.15,0,0.85,1) ${delay}s both`,
-                }}
-              />
-            ))}
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5 }}>
+            {/* Layer 1 — outer haze, slow breath */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'radial-gradient(ellipse 90% 80% at 50% 50%, transparent 40%, rgba(80,160,220,0.055) 68%, rgba(50,120,190,0.10) 100%)',
+              filter: 'blur(12px)',
+              animation: 'water-pulse-1 4.3s ease-in-out infinite',
+            }} />
+            {/* Layer 2 — mid haze, slightly offset phase */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'radial-gradient(ellipse 68% 58% at 51% 50%, transparent 36%, rgba(100,190,240,0.04) 60%, rgba(60,130,200,0.07) 100%)',
+              filter: 'blur(18px)',
+              animation: 'water-pulse-2 5.8s ease-in-out infinite reverse',
+            }} />
+            {/* Layer 3 — central caustic shimmer */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'radial-gradient(ellipse 48% 38% at 49% 51%, rgba(140,210,255,0.03) 0%, transparent 55%)',
+              filter: 'blur(6px)',
+              animation: 'water-pulse-3 3.2s ease-in-out infinite',
+            }} />
           </div>
         )}
 
-        {/* Depth vignette — edges darken as we plunge */}
+        {/* Depth vignette — dark edges close in as you descend */}
         {isVisible && (
           <div
             aria-hidden="true"
@@ -119,8 +113,8 @@ export function AbyssRealm() {
               position: 'absolute',
               inset: 0,
               pointerEvents: 'none',
-              background: `radial-gradient(ellipse 68% 68% at 50% 50%, transparent 32%, rgba(0,0,0,${Math.min(0.84, 0.28 + progress * 0.72)}) 100%)`,
-              zIndex: 8,
+              zIndex: 6,
+              background: `radial-gradient(ellipse at center, transparent ${Math.max(22, 62 - progress * 40)}%, rgba(0,0,0,${Math.min(0.80, progress * 1.1).toFixed(3)}) 100%)`
             }}
           />
         )}
@@ -295,10 +289,18 @@ export function AbyssRealm() {
       </div>
 
       <style>{`
-        @keyframes abyss-ripple {
-          0%   { transform: scale(0.08); opacity: 1;    filter: blur(0px);  }
-          45%  {                         opacity: 0.45; filter: blur(2px);  }
-          100% { transform: scale(2.6);  opacity: 0;    filter: blur(5px);  }
+        @keyframes water-pulse-1 {
+          0%, 100% { opacity: 0.60; transform: scale(1.00) translate(0%,     0%);    }
+          50%       { opacity: 1.00; transform: scale(1.04) translate(0.3%,  -0.3%); }
+        }
+        @keyframes water-pulse-2 {
+          0%, 100% { opacity: 0.45; transform: scale(1.02) translate(-0.2%,  0.2%); }
+          50%       { opacity: 0.85; transform: scale(0.98) translate( 0.2%, -0.4%); }
+        }
+        @keyframes water-pulse-3 {
+          0%, 100% { opacity: 0.30; transform: scale(1.00) translateY(0%);   }
+          38%       { opacity: 0.72; transform: scale(1.09) translateY(0.8%); }
+          68%       { opacity: 0.40; transform: scale(0.95) translateY(-0.4%); }
         }
       `}</style>
     </div>

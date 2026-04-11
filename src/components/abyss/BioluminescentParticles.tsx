@@ -30,7 +30,7 @@ const VERT = /* glsl */ `
     gl_Position = projectionMatrix * mvPos;
 
     // Perspective-correct point size
-    gl_PointSize = aSize * (300.0 / -mvPos.z);
+    gl_PointSize = aSize * (200.0 / -mvPos.z);
   }
 `
 
@@ -90,7 +90,8 @@ export function BioluminescentParticles({
       offset[i]      = Math.random() * Math.PI * 2
       // Significantly slower — lazy, dreamlike drift
       speed[i]       = 0.08 + Math.random() * 0.22
-      size[i]        = 2.2 + Math.random() * 5.8
+      // 75% smaller than before — tiny glowing specks, not orbs
+      size[i]        = 0.55 + Math.random() * 1.45
     }
 
     g.setAttribute('position', new THREE.BufferAttribute(pos,    3))

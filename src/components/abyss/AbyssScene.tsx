@@ -1,10 +1,11 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useMemo } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { BioluminescentParticles } from './BioluminescentParticles'
+import { Bubbles } from './Bubbles'
 
 // ---------------------------------------------------------------------------
 // Camera path — descends from surface through 3 depth tiers
@@ -107,192 +108,95 @@ function LightRays({ progressRef }: { progressRef: React.MutableRefObject<number
 }
 
 // ---------------------------------------------------------------------------
-// Entrance bubbles — tiny hollow rising spheres at the surface
+// Motion streaks — thin upward-rushing lines visible during the descent plunge
+// They simulate particles rushing past the camera as it falls through water.
+// Count, length, and opacity all scale with scroll speed; gone by mid-depth.
 // ---------------------------------------------------------------------------
-const BUBBLE_VERT = /* glsl */ `
-  uniform float uTime;
-  attribute float aOffset;
-  attribute float aSpeed;
-  attribute float aSize;
+function MotionStreaks({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
+  const COUNT = 60
 
-  void main() {
-    vec3 pos = position;
-    // Rise upward in 18-unit wrap cycles
-    float rise = mod(uTime * aSpeed * 0.5 + aOffset * 5.7, 18.0) - 9.0;
-    pos.y += rise;
-    // Gentle horizontal wobble
-    pos.x += sin(uTime * aSpeed * 0.4 + aOffset) * 0.25;
-    pos.z += cos(uTime * aSpeed * 0.3 + aOffset * 1.3) * 0.18;
-
-    vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-    gl_Position = projectionMatrix * mvPos;
-    gl_PointSize = aSize * (300.0 / -mvPos.z);
-  }
-`
-
-const BUBBLE_FRAG = /* glsl */ `
-  uniform float uOpacity;
-
-  void main() {
-    vec2 uv = gl_PointCoord - 0.5;
-    float r = length(uv);
-    if (r > 0.5) discard;
-    // Hollow bubble: bright rim, faint interior
-    float rim  = smoothstep(0.30, 0.43, r) * (1.0 - smoothstep(0.43, 0.5, r));
-    float core = (1.0 - smoothstep(0.0, 0.30, r)) * 0.07;
-    float alpha = rim * 0.9 + core;
-    gl_FragColor = vec4(0.72, 0.92, 1.0, alpha * uOpacity);
-  }
-`
-
-function EntranceBubbles({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
-  const matRef = useRef<THREE.ShaderMaterial>(null)
-  const COUNT  = 30
-
-  const [geo, mat] = useMemo(() => {
-    const g      = new THREE.BufferGeometry()
-    const pos    = new Float32Array(COUNT * 3)
-    const offset = new Float32Array(COUNT)
-    const speed  = new Float32Array(COUNT)
-    const size   = new Float32Array(COUNT)
-
-    for (let i = 0; i < COUNT; i++) {
-      pos[i * 3]     = (Math.random() - 0.5) * 18
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 14
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 16
-      offset[i]      = Math.random() * Math.PI * 2
-      speed[i]       = 0.4 + Math.random() * 0.6
-      // 80% smaller than main particles (main: 2.2–8.0 → target: 0.44–1.6)
-      size[i]        = 0.44 + Math.random() * 1.16
-    }
-
-    g.setAttribute('position', new THREE.BufferAttribute(pos,    3))
-    g.setAttribute('aOffset',  new THREE.BufferAttribute(offset, 1))
-    g.setAttribute('aSpeed',   new THREE.BufferAttribute(speed,  1))
-    g.setAttribute('aSize',    new THREE.BufferAttribute(size,   1))
-
-    const m = new THREE.ShaderMaterial({
-      vertexShader:   BUBBLE_VERT,
-      fragmentShader: BUBBLE_FRAG,
-      uniforms: {
-        uTime:    { value: 0 },
-        uOpacity: { value: 1.0 },
-      },
-      blending:    THREE.AdditiveBlending,
-      depthWrite:  false,
-      transparent: true,
-    })
-    return [g, m] as const
-  }, [])
-
-  useFrame(({ clock }) => {
-    if (!matRef.current) return
-    matRef.current.uniforms.uTime.value = clock.getElapsedTime()
-    // Gone by t=0.12 — surface only
-    matRef.current.uniforms.uOpacity.value = Math.max(0, 1 - progressRef.current / 0.12)
-  })
-
-  return (
-    <points>
-      <primitive object={geo} attach="geometry" />
-      <primitive object={mat} attach="material" ref={matRef} />
-    </points>
+  const streakData = useRef(
+    Array.from({ length: COUNT }, () => ({
+      x:      (Math.random() - 0.5) * 22,
+      y:      (Math.random() - 0.5) * 26,
+      z:      (Math.random() - 0.5) * 18,
+      speed:  8 + Math.random() * 14,
+      length: 0.22 + Math.random() * 0.55,
+    })),
   )
-}
 
-// ---------------------------------------------------------------------------
-// Speed streaks — elongated vertical particles that rush past during plunge
-// ---------------------------------------------------------------------------
-const STREAK_VERT = /* glsl */ `
-  uniform float uTime;
-  attribute float aOffset;
-  attribute float aRise;
-  attribute float aSize;
-
-  void main() {
-    vec3 pos = position;
-    // Stream upward in 30-unit cycles — simulate camera diving past them
-    pos.y += mod(uTime * aRise + aOffset, 30.0);
-
-    vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-    gl_Position = projectionMatrix * mvPos;
-    gl_PointSize = aSize * (550.0 / -mvPos.z);
-  }
-`
-
-const STREAK_FRAG = /* glsl */ `
-  uniform float uOpacity;
-
-  void main() {
-    vec2 uv = gl_PointCoord - 0.5;
-    // Very narrow X, tall Y — motion-blur streak
-    float rx = uv.x * 14.0;
-    float ry = uv.y * 1.1;
-    float r  = rx * rx + ry * ry;
-    if (r > 0.25) discard;
-    float core    = 1.0 - smoothstep(0.04, 0.25, r);
-    float tipFade = 1.0 - smoothstep(0.22, 0.5, abs(uv.y));
-    gl_FragColor  = vec4(0.62, 0.84, 1.0, core * tipFade * uOpacity * 0.55);
-  }
-`
-
-function SpeedStreaks({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
-  const matRef = useRef<THREE.ShaderMaterial>(null)
-  const COUNT  = 60
-
-  const [geo, mat] = useMemo(() => {
-    const g      = new THREE.BufferGeometry()
-    const pos    = new Float32Array(COUNT * 3)
-    const offset = new Float32Array(COUNT)
-    const rise   = new Float32Array(COUNT)
-    const size   = new Float32Array(COUNT)
-
-    for (let i = 0; i < COUNT; i++) {
-      // Tunnel of streaks around the top half of the camera path
-      const angle  = Math.random() * Math.PI * 2
-      const radius = 3 + Math.random() * 6
-      pos[i * 3]     = Math.cos(angle) * radius
-      pos[i * 3 + 1] = -(Math.random() * 40)   // Y: 0 to -40 (first ~55% of path)
-      pos[i * 3 + 2] = Math.sin(angle) * radius - 10
-      offset[i]      = Math.random() * 30
-      rise[i]        = 2.5 + Math.random() * 3.0
-      size[i]        = 8 + Math.random() * 10
-    }
-
-    g.setAttribute('position', new THREE.BufferAttribute(pos,    3))
-    g.setAttribute('aOffset',  new THREE.BufferAttribute(offset, 1))
-    g.setAttribute('aRise',    new THREE.BufferAttribute(rise,   1))
-    g.setAttribute('aSize',    new THREE.BufferAttribute(size,   1))
-
-    const m = new THREE.ShaderMaterial({
-      vertexShader:   STREAK_VERT,
-      fragmentShader: STREAK_FRAG,
-      uniforms: {
-        uTime:    { value: 0 },
-        uOpacity: { value: 0.0 },
-      },
-      blending:    THREE.AdditiveBlending,
-      depthWrite:  false,
-      transparent: true,
-    })
-    return [g, m] as const
+  const geo = useMemo(() => {
+    const g    = new THREE.BufferGeometry()
+    const arr  = new Float32Array(COUNT * 6) // 2 verts × 3 coords per streak
+    const attr = new THREE.BufferAttribute(arr, 3)
+    attr.setUsage(THREE.DynamicDrawUsage)
+    g.setAttribute('position', attr)
+    return g
   }, [])
 
-  useFrame(({ clock }) => {
-    if (!matRef.current) return
-    matRef.current.uniforms.uTime.value = clock.getElapsedTime()
-    const p = progressRef.current
-    // Fade in fast (0→0.06), hold, fade out by mid-depth (0.12→0.5)
-    const fadeIn  = Math.min(1, p / 0.06)
-    const fadeOut = Math.max(0, 1 - Math.max(0, p - 0.12) / 0.38)
-    matRef.current.uniforms.uOpacity.value = fadeIn * fadeOut
+  const matRef = useRef<THREE.LineBasicMaterial>(null)
+  const prevT  = useRef(0)
+
+  useFrame(({ camera }, delta) => {
+    const t = progressRef.current
+
+    // Fade: visible in first half, fully gone by t = 0.5
+    const fade = Math.max(0, 1 - t / 0.5)
+    if (matRef.current) matRef.current.opacity = fade * 0.45
+
+    if (fade <= 0.01) {
+      geo.setDrawRange(0, 0)
+      prevT.current = t
+      return
+    }
+    geo.setDrawRange(0, COUNT * 2)
+
+    // Per-frame progress delta → scroll speed boost
+    const dT          = Math.abs(t - prevT.current)
+    prevT.current     = t
+    const scrollBoost = 1 + Math.min((dT / Math.max(delta, 0.001)) * 60, 8)
+
+    const camY    = camera.position.y
+    const posAttr = geo.getAttribute('position') as THREE.BufferAttribute
+    const arr     = posAttr.array as Float32Array
+
+    for (let i = 0; i < COUNT; i++) {
+      const s = streakData.current[i]
+
+      // Rush upward (camera plunges down, particles appear to rush upward)
+      s.y += delta * s.speed * scrollBoost
+
+      // Reset below camera when streak passes above view
+      if (s.y > camY + 13) {
+        s.y = camY - 14 - Math.random() * 8
+        s.x = (Math.random() - 0.5) * 22
+        s.z = (Math.random() - 0.5) * 18
+      }
+
+      // Stretch length with speed — longer streaks = more motion blur feel
+      const len = s.length * Math.min(1 + scrollBoost * 0.35, 2.8)
+
+      arr[i * 6]     = s.x
+      arr[i * 6 + 1] = s.y
+      arr[i * 6 + 2] = s.z
+      arr[i * 6 + 3] = s.x
+      arr[i * 6 + 4] = s.y + len
+      arr[i * 6 + 5] = s.z
+    }
+
+    posAttr.needsUpdate = true
   })
 
   return (
-    <points>
-      <primitive object={geo} attach="geometry" />
-      <primitive object={mat} attach="material" ref={matRef} />
-    </points>
+    <lineSegments geometry={geo}>
+      <lineBasicMaterial
+        ref={matRef}
+        color="#8ab8d8"
+        transparent
+        opacity={0.45}
+        depthWrite={false}
+      />
+    </lineSegments>
   )
 }
 
@@ -355,11 +259,11 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
       {/* Light rays from above — surface only, fade by mid-depth */}
       <LightRays progressRef={progressRef} />
 
-      {/* Tiny rising air bubbles at the entrance */}
-      <EntranceBubbles progressRef={progressRef} />
+      {/* Air bubbles at the entrance — tiny rising specks, gone as you descend */}
+      <Bubbles progressRef={progressRef} />
 
-      {/* Speed streaks — rush past camera during initial plunge */}
-      <SpeedStreaks progressRef={progressRef} />
+      {/* Speed lines — thin streaks rushing upward during the plunge */}
+      <MotionStreaks progressRef={progressRef} />
 
       {/* Tier 1 — Twilight Zone lights */}
       <pointLight position={[-3, -10,  -2]} intensity={3.5} color="#00c8b4" distance={20} decay={2}   />
