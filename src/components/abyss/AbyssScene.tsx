@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { BioluminescentParticles } from './BioluminescentParticles'
+import { Bubbles } from './Bubbles'
 
 // ---------------------------------------------------------------------------
 // Camera path — descends from surface through 3 depth tiers
@@ -25,9 +26,10 @@ function buildAbyssPath(): {
     quats.push(new THREE.Quaternion().setFromRotationMatrix(m))
   }
 
-  // Surface — camera enters from above, peering into the dark
-  push(new THREE.Vector3(  0,  6,  12), new THREE.Vector3( 0,  -2,   2))
-  push(new THREE.Vector3(  0,  2,   6), new THREE.Vector3( 0,  -6,  -2))
+  // Surface — camera just below the surface, looking slightly UP toward the light above,
+  // then tilting downward as the descent begins
+  push(new THREE.Vector3(  0,  2,  10), new THREE.Vector3( 0,   7,   5))
+  push(new THREE.Vector3(  0,  0,   6), new THREE.Vector3( 0,  -4,  -2))
 
   // ── Tier 1: Twilight Zone ─────────────────────────────────────────────────
   push(new THREE.Vector3( -3,  -4,   3), new THREE.Vector3(-2, -10,  -4))
@@ -164,6 +166,9 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
       {/* Light rays from above — surface only, fade by mid-depth */}
       <LightRays progressRef={progressRef} />
 
+      {/* Bubbles rising from below — only visible near surface (first 15% of scroll) */}
+      <Bubbles progressRef={progressRef} />
+
       {/* Tier 1 — Twilight Zone lights */}
       <pointLight position={[-3, -10,  -2]} intensity={3.5} color="#00c8b4" distance={20} decay={2}   />
       <pointLight position={[ 3, -15,  -6]} intensity={2.5} color="#008870" distance={15} decay={2}   />
@@ -227,7 +232,7 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
 export default function AbyssScene({ progressRef }: { progressRef: React.MutableRefObject<number> }) {
   return (
     <Canvas
-      camera={{ position: [0, 6, 12], fov: 50, near: 0.1, far: 280 }}
+      camera={{ position: [0, 2, 10], fov: 50, near: 0.1, far: 280 }}
       dpr={[1, 1.5]}
       gl={{
         antialias: false,

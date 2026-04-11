@@ -78,6 +78,42 @@ export function AbyssRealm() {
           {isVisible && <AbyssScene progressRef={progressRef} />}
         </div>
 
+        {/* Surface water overlay — breaking through the surface (progress 0–0.05) */}
+        {isVisible && progress < 0.06 && (() => {
+          const rippleOpacity = Math.max(0, 1 - progress / 0.05)
+          return (
+            <>
+              {/* Blur lens: backdrop-filter clipped to wavy top portion */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  pointerEvents: 'none',
+                  zIndex: 11,
+                  opacity: rippleOpacity,
+                  backdropFilter: 'blur(3px) brightness(1.12) saturate(1.35)',
+                  WebkitBackdropFilter: 'blur(3px) brightness(1.12) saturate(1.35)',
+                  animation: 'surface-wave 3s ease-in-out infinite',
+                }}
+              />
+              {/* Light-blue color tint fading downward */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  pointerEvents: 'none',
+                  zIndex: 10,
+                  opacity: rippleOpacity,
+                  background:
+                    'linear-gradient(to bottom, rgba(80,160,220,0.22) 0%, rgba(40,120,180,0.08) 40%, transparent 65%)',
+                }}
+              />
+            </>
+          )
+        })()}
+
         {/* Bioluminescent entrance bloom */}
         {isVisible && (
           <div
@@ -267,6 +303,29 @@ export function AbyssRealm() {
         @keyframes abyss-bloom-in {
           from { opacity: 0; }
           to   { opacity: 1; }
+        }
+        @keyframes surface-wave {
+          0% {
+            clip-path: polygon(
+              0% 0%, 100% 0%, 100% 58%,
+              88% 62%, 75% 57%, 63% 62%, 50% 57%,
+              37% 61%, 25% 56%, 12% 61%, 0% 57%
+            );
+          }
+          50% {
+            clip-path: polygon(
+              0% 0%, 100% 0%, 100% 60%,
+              88% 56%, 75% 61%, 63% 56%, 50% 61%,
+              37% 57%, 25% 61%, 12% 56%, 0% 61%
+            );
+          }
+          100% {
+            clip-path: polygon(
+              0% 0%, 100% 0%, 100% 58%,
+              88% 62%, 75% 57%, 63% 62%, 50% 57%,
+              37% 61%, 25% 56%, 12% 61%, 0% 57%
+            );
+          }
         }
       `}</style>
     </div>
