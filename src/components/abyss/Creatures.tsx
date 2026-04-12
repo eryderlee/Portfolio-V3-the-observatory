@@ -51,13 +51,13 @@ function JellyfishLayer() {
       dummy.updateMatrix()
       bell.setMatrixAt(i, dummy.matrix)
 
-      // Tentacle beads — offset from bell rim, sway with current
+      // Tentacle beads — hang from the rim at wy, sway with current
       for (let j = 0; j < T_N; j++) {
         const ang = (j / T_N) * Math.PI * 2
         const tx  = wx + Math.cos(ang) * (r * 0.8)
         const tz  = wz + Math.sin(ang) * (r * 0.8)
         for (let k = 0; k < B_N; k++) {
-          const drop = r * 0.4 + k * r * 0.46
+          const drop = r * 0.5 + k * r * 0.50
           const sway = Math.min(k * 0.10, 0.45)
           const px   = tx + Math.sin(t * 1.4 * sp + ph + j * 0.9 + k * 0.4) * sway
           const pz   = tz + Math.cos(t * 1.2 * sp + ph * 0.9 + j * 1.1)     * sway
@@ -75,16 +75,17 @@ function JellyfishLayer() {
 
   return (
     <>
-      {/* Bell domes — translucent teal, additive blending */}
+      {/* Bell domes — translucent teal, additive blending; FrontSide so only
+          the convex exterior renders (dome facing up, opening facing down) */}
       <instancedMesh ref={bellRef} args={[undefined, undefined, JF_N]} frustumCulled={false}>
         <sphereGeometry args={[1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshBasicMaterial
           color="#00c8b4"
           transparent
-          opacity={0.28}
+          opacity={0.38}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
-          side={THREE.DoubleSide}
+          side={THREE.FrontSide}
         />
       </instancedMesh>
 
@@ -104,7 +105,7 @@ function JellyfishLayer() {
 }
 
 // ============================================================================
-// Fish Schools — small bioluminescent cone silhouettes, lazy orbital drift
+// Fish Schools — lazy orbital drift, small bioluminescent ellipsoids
 // ============================================================================
 
 interface SchoolDef {
@@ -140,7 +141,7 @@ function FishSchool({
     })),
   )
 
-  const meshRefs = useRef<(THREE.Mesh | null)[]>(Array(def.count).fill(null))
+  const groupRefs = useRef<(THREE.Group | null)[]>(Array(def.count).fill(null))
 
   useFrame(() => {
     const t = elapsed.current
@@ -154,10 +155,10 @@ function FishSchool({
       const y = def.center[1] + fish.yOffset + Math.sin(t * 0.8 + fish.bobPhase) * 0.3
       const z = def.center[2] + Math.sin(fish.angle) * r * 0.55 + fish.zOffset
 
-      const mesh = meshRefs.current[i]
-      if (mesh) {
-        mesh.position.set(x, y, z)
-        mesh.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
+      const group = groupRefs.current[i]
+      if (group) {
+        group.position.set(x, y, z)
+        group.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
       }
     }
   })
@@ -165,14 +166,18 @@ function FishSchool({
   return (
     <group>
       {Array.from({ length: def.count }, (_, i) => (
-        <mesh key={i} ref={(el) => { meshRefs.current[i] = el }}>
-          <coneGeometry args={[0.05, 0.22, 4]} />
-          <meshStandardMaterial
-            color="#a0e0d8"
-            emissive="#00c8b4"
-            emissiveIntensity={0.2}
-          />
-        </mesh>
+        <group key={i} ref={(el) => { groupRefs.current[i] = el }}>
+          {/* Body — elongated ellipsoid along direction of movement (+Z) */}
+          <mesh scale={[0.055, 0.038, 0.12]}>
+            <sphereGeometry args={[1, 8, 5]} />
+            <meshStandardMaterial color="#a0e0d8" emissive="#00c8b4" emissiveIntensity={0.2} />
+          </mesh>
+          {/* Tail fin — triangular cone, apex blends into body, base fans out at rear (-Z) */}
+          <mesh position={[0, 0, -0.16]} rotation={[Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.08, 0.10, 3]} />
+            <meshStandardMaterial color="#a0e0d8" emissive="#00c8b4" emissiveIntensity={0.2} />
+          </mesh>
+        </group>
       ))}
     </group>
   )
