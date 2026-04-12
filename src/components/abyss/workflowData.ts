@@ -110,21 +110,21 @@ export const WORKFLOW_GRAPHS: WorkflowGraph[] = [
 // World-space placements: [x, y, z] and scale
 // Sorted shallowest → deepest to match WORKFLOW_GRAPHS order.
 // Y values follow the camera tiers:
-//   Tier 1 (Twilight)  →  Y  -4 to -20
-//   Tier 2 (Midnight)  →  Y -22 to -44
-//   Tier 3 (Abyss)     →  Y -46 to -73
+//   Tier 1 (Twilight)  →  Y  -5 to -22
+//   Tier 2 (Midnight)  →  Y -29 to -44
+//   Tier 3 (Abyss)     →  Y -59 to -73
 // X offsets keep organisms in peripheral view as the camera descends.
 
 export const WORKFLOW_PLACEMENTS: {
   position: [number, number, number]
   scale:    number
 }[] = [
-  { position: [ -9,  -14,  -5], scale: 3.0 },  // Email Inbox Manager
-  { position: [  9,  -23,  -8], scale: 3.8 },  // Crypto Market Analyzer
-  { position: [-11,  -31, -10], scale: 4.5 },  // LinkedIn Lead Builder
-  { position: [  8,  -38, -13], scale: 4.8 },  // Article Generator
-  { position: [ -7,  -44, -15], scale: 5.2 },  // Create Audit
-  { position: [  9,  -53, -12], scale: 5.8 },  // Email Management Lvl 3
-  { position: [-10,  -61, -16], scale: 7.0 },  // Data Enricher
-  { position: [  6,  -68, -18], scale: 8.0 },  // AI Voice Agent (Vapi) — deepest
+  { position: [ -9,   -5,  -5], scale: 3.0 },  // Email Inbox Manager
+  { position: [  9,  -14,  -8], scale: 3.8 },  // Crypto Market Analyzer
+  { position: [-11,  -22, -10], scale: 4.5 },  // LinkedIn Lead Builder
+  { position: [  8,  -29, -13], scale: 4.8 },  // Article Generator
+  { position: [ -7,  -35, -15], scale: 5.2 },  // Create Audit
+  { position: [  9,  -44, -12], scale: 5.8 },  // Email Management Lvl 3
+  { position: [-10,  -59, -16], scale: 7.0 },  // Data Enricher
+  { position: [  6,  -73, -18], scale: 8.0 },  // AI Voice Agent (Vapi) — deepest
 ]
