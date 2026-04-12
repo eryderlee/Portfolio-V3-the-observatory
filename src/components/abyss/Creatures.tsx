@@ -42,9 +42,12 @@ function JellyfishLayer() {
       // Asymmetric pump — active jellyfish pulse faster
       const pulse = 1 - 0.22 * Math.max(0, Math.sin(t * 5.0 * sp + ph))
 
+      // Bell dome: half-sphere opens downward (thetaStart=0 = upper hemisphere,
+      // dome at +Y). Scale Y by 1.5× so it reads as an upright dome rather than
+      // a flat disc when the camera passes at an angle.
       dummy.position.set(wx, wy, wz)
       dummy.rotation.set(0, 0, 0)
-      dummy.scale.set(r, pulse * r, r)
+      dummy.scale.set(r, pulse * r * 1.5, r)
       dummy.updateMatrix()
       bell.setMatrixAt(i, dummy.matrix)
 
@@ -101,24 +104,23 @@ function JellyfishLayer() {
 }
 
 // ============================================================================
-// Fish Schools — individual fish meshes, clearly fish-shaped
+// Fish Schools — small bioluminescent cone silhouettes, lazy orbital drift
 // ============================================================================
 
 interface SchoolDef {
   center:      [number, number, number]
+  count:       number
   orbitRadius: number
   baseSpeed:   number
 }
 
-const FISH_PER_SCHOOL = 10
-
 // 5 schools spanning twilight → midnight → abyss zones
 const SCHOOL_DEFS: SchoolDef[] = [
-  { center: [ -4,  -7,  -4], orbitRadius: 3.5, baseSpeed: 0.32 },
-  { center: [  6, -16,  -7], orbitRadius: 4.0, baseSpeed: 0.25 },
-  { center: [ -8, -25, -10], orbitRadius: 3.2, baseSpeed: 0.39 },
-  { center: [  5, -36, -13], orbitRadius: 4.5, baseSpeed: 0.28 },
-  { center: [ -5, -46, -14], orbitRadius: 3.8, baseSpeed: 0.21 },
+  { center: [ -4,  -7,  -4], count: 18, orbitRadius: 3.5, baseSpeed: 0.32 },
+  { center: [  6, -16,  -7], count: 22, orbitRadius: 4.0, baseSpeed: 0.25 },
+  { center: [ -8, -25, -10], count: 16, orbitRadius: 3.2, baseSpeed: 0.39 },
+  { center: [  5, -36, -13], count: 20, orbitRadius: 4.5, baseSpeed: 0.28 },
+  { center: [ -5, -46, -14], count: 24, orbitRadius: 3.8, baseSpeed: 0.21 },
 ]
 
 function FishSchool({
@@ -129,74 +131,22 @@ function FishSchool({
   elapsed: React.MutableRefObject<number>
 }) {
   const fishState = useRef(
-    Array.from({ length: FISH_PER_SCHOOL }, (_, i) => ({
-      angle:    (i / FISH_PER_SCHOOL) * Math.PI * 2 + (i * 0.37) % 1.0,
-      yOffset:  (((i * 17 + 5) % 23) / 23 - 0.5) * 2.0,
-      zOffset:  (((i * 11 + 3) % 17) / 17 - 0.5) * 1.5,
+    Array.from({ length: def.count }, (_, i) => ({
+      angle:    (i / def.count) * Math.PI * 2 + (i * 0.37) % 1.0,
+      yOffset:  (((i * 17 + 5) % 23) / 23 - 0.5) * 2.5,
+      zOffset:  (((i * 11 + 3) % 17) / 17 - 0.5) * 1.8,
       speed:    0.8 + ((i * 13 + 7) % 11) / 11 * 0.5,
       bobPhase: (i * 2.39996) % (Math.PI * 2),
     })),
   )
 
-  const fishRefs = useRef<(THREE.Group | null)[]>(Array(FISH_PER_SCHOOL).fill(null))
-  const tailRefs = useRef<(THREE.Group | null)[]>(Array(FISH_PER_SCHOOL).fill(null))
-
-  // Geometries — created once per school instance
-  const { bodyGeo, tailGeo, dorsalGeo } = useMemo(() => {
-    // Body: unit sphere scaled in JSX to torpedo shape (wider at head, tapers to tail)
-    const bodyGeo = new THREE.SphereGeometry(1, 12, 8)
-
-    // Forked V-tail: two triangular lobes spreading up (+Y) and down (-Y) from peduncle.
-    // This geometry is placed at [0,0,-0.44] (back of body) and wiggles via group rotation.
-    // Lobe tips extend backward (-Z) and outward in Y.
-    const tailGeo = new THREE.BufferGeometry()
-    const tv = new Float32Array([
-      // Top lobe (vertices 0-2)
-       0.00,  0.02,  0.00,   // root — merges with peduncle
-       0.16,  0.34, -0.42,   // right tip
-      -0.16,  0.34, -0.42,   // left tip
-      // Bottom lobe (vertices 3-5)
-       0.00, -0.02,  0.00,   // root
-      -0.16, -0.34, -0.42,   // left tip
-       0.16, -0.34, -0.42,   // right tip
-    ])
-    tailGeo.setAttribute('position', new THREE.BufferAttribute(tv, 3))
-    tailGeo.setIndex([0, 1, 2,  3, 4, 5])
-    tailGeo.computeVertexNormals()
-
-    // Dorsal fin: small upward triangle, angled forward like a real dorsal fin
-    const dorsalGeo = new THREE.BufferGeometry()
-    const dv = new Float32Array([
-      -0.05,  0.00, -0.10,   // back-left base
-       0.05,  0.00, -0.10,   // back-right base
-       0.00,  0.26,  0.12,   // tip (swept forward)
-    ])
-    dorsalGeo.setAttribute('position', new THREE.BufferAttribute(dv, 3))
-    dorsalGeo.setIndex([0, 1, 2])
-    dorsalGeo.computeVertexNormals()
-
-    return { bodyGeo, tailGeo, dorsalGeo }
-  }, [])
-
-  const bodyMat = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: '#a8dce8' }),
-    [],
-  )
-  const finMat = useMemo(
-    () => new THREE.MeshBasicMaterial({
-      color:       '#78c8e0',
-      transparent: true,
-      opacity:     0.80,
-      side:        THREE.DoubleSide,
-    }),
-    [],
-  )
+  const meshRefs = useRef<(THREE.Mesh | null)[]>(Array(def.count).fill(null))
 
   useFrame(() => {
     const t = elapsed.current
     const r = def.orbitRadius
 
-    for (let i = 0; i < FISH_PER_SCHOOL; i++) {
+    for (let i = 0; i < def.count; i++) {
       const fish = fishState.current[i]
       fish.angle += 0.016 * fish.speed * def.baseSpeed
 
@@ -204,33 +154,25 @@ function FishSchool({
       const y = def.center[1] + fish.yOffset + Math.sin(t * 0.8 + fish.bobPhase) * 0.3
       const z = def.center[2] + Math.sin(fish.angle) * r * 0.55 + fish.zOffset
 
-      const grp = fishRefs.current[i]
-      if (grp) {
-        grp.position.set(x, y, z)
-        grp.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
-      }
-
-      // Tail wiggles side-to-side (Y rotation in fish's own frame = left/right)
-      const tail = tailRefs.current[i]
-      if (tail) {
-        tail.rotation.y = Math.sin(t * 5.0 * def.baseSpeed * fish.speed + fish.bobPhase) * 0.30
+      const mesh = meshRefs.current[i]
+      if (mesh) {
+        mesh.position.set(x, y, z)
+        mesh.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
       }
     }
   })
 
   return (
     <group>
-      {Array.from({ length: FISH_PER_SCHOOL }, (_, i) => (
-        <group key={i} ref={(el) => { fishRefs.current[i] = el }}>
-          {/* Body: torpedo ellipsoid — nose at +Z, tail end at -Z */}
-          <mesh geometry={bodyGeo} scale={[0.20, 0.12, 0.44]} material={bodyMat} />
-          {/* Dorsal fin: sits on top of mid-body */}
-          <mesh geometry={dorsalGeo} position={[0, 0.12, 0.08]} material={finMat} />
-          {/* Tail group — positioned at body rear, wiggles side-to-side */}
-          <group ref={(el) => { tailRefs.current[i] = el }} position={[0, 0, -0.44]}>
-            <mesh geometry={tailGeo} material={finMat} />
-          </group>
-        </group>
+      {Array.from({ length: def.count }, (_, i) => (
+        <mesh key={i} ref={(el) => { meshRefs.current[i] = el }}>
+          <coneGeometry args={[0.05, 0.22, 4]} />
+          <meshStandardMaterial
+            color="#a0e0d8"
+            emissive="#00c8b4"
+            emissiveIntensity={0.2}
+          />
+        </mesh>
       ))}
     </group>
   )
