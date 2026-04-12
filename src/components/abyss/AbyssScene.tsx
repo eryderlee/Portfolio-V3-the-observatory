@@ -8,6 +8,7 @@ import { BioluminescentParticles } from './BioluminescentParticles'
 import { Bubbles }                              from './Bubbles'
 import { WorkflowOrganism }                     from './WorkflowOrganism'
 import { WORKFLOW_GRAPHS, WORKFLOW_PLACEMENTS } from './workflowData'
+import { Creatures }                            from './Creatures'
 
 // ---------------------------------------------------------------------------
 // Camera path — dives from surface and visits each workflow organism.
@@ -342,6 +343,9 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
         progressRef={progressRef}
         depthFadeStart={0.8}
       />
+
+      {/* ── Deep sea creatures — jellyfish, fish schools, leviathan */}
+      <Creatures progressRef={progressRef} />
 
       {/* ── Workflow organisms — n8n graphs rendered as bioluminescent networks */}
       {WORKFLOW_GRAPHS.map((graph, i) => (
