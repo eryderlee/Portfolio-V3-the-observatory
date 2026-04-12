@@ -9,11 +9,11 @@ import * as THREE          from 'three'
 // ============================================================================
 
 const JF_DATA = [
-  { x:  4, y:  -6, z: -3, ph: 0.0, radius: 0.5, speedMult: 1.0, driftPhase: 0.7, driftAmp: 0.8 },
-  { x: -5, y:  -9, z: -5, ph: 1.2, radius: 0.3, speedMult: 0.2, driftPhase: 1.5, driftAmp: 0.2 }, // idle
-  { x:  3, y: -12, z: -4, ph: 2.4, radius: 0.9, speedMult: 0.7, driftPhase: 0.3, driftAmp: 0.6 },
-  { x: -3, y: -18, z: -7, ph: 0.8, radius: 1.2, speedMult: 0.2, driftPhase: 2.1, driftAmp: 0.2 }, // idle
-  { x:  7, y: -14, z: -6, ph: 3.6, radius: 0.6, speedMult: 0.6, driftPhase: 0.9, driftAmp: 0.5 },
+  { x:  4, y:  -6, z: -3, ph: 0.0, radius: 0.5, speedMult: 1.0,  driftPhase: 0.7, driftAmp: 0.8  },
+  { x: -5, y:  -9, z: -5, ph: 1.2, radius: 0.3, speedMult: 0.12, driftPhase: 1.5, driftAmp: 0.08 }, // idle
+  { x:  3, y: -12, z: -4, ph: 2.4, radius: 0.9, speedMult: 0.7,  driftPhase: 0.3, driftAmp: 0.6  },
+  { x: -3, y: -18, z: -7, ph: 0.8, radius: 1.2, speedMult: 0.12, driftPhase: 2.1, driftAmp: 0.08 }, // idle
+  { x:  7, y: -14, z: -6, ph: 3.6, radius: 0.6, speedMult: 0.13, driftPhase: 0.9, driftAmp: 0.08 }, // idle
 ]
 
 const JF_N = JF_DATA.length
@@ -138,7 +138,7 @@ function FishSchool({
     })),
   )
 
-  const meshRefs = useRef<(THREE.Mesh | null)[]>(Array(def.count).fill(null))
+  const groupRefs = useRef<(THREE.Group | null)[]>(Array(def.count).fill(null))
 
   useFrame(() => {
     const t = elapsed.current
@@ -152,10 +152,10 @@ function FishSchool({
       const y = def.center[1] + fish.yOffset + Math.sin(t * 0.8 + fish.bobPhase) * 0.3
       const z = def.center[2] + Math.sin(fish.angle) * r * 0.55 + fish.zOffset
 
-      const mesh = meshRefs.current[i]
-      if (mesh) {
-        mesh.position.set(x, y, z)
-        mesh.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
+      const group = groupRefs.current[i]
+      if (group) {
+        group.position.set(x, y, z)
+        group.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
       }
     }
   })
@@ -163,14 +163,18 @@ function FishSchool({
   return (
     <group>
       {Array.from({ length: def.count }, (_, i) => (
-        <mesh key={i} ref={(el) => { meshRefs.current[i] = el }}>
-          <coneGeometry args={[0.05, 0.22, 4]} />
-          <meshStandardMaterial
-            color="#a0e0d8"
-            emissive="#00c8b4"
-            emissiveIntensity={0.2}
-          />
-        </mesh>
+        <group key={i} ref={(el) => { groupRefs.current[i] = el }}>
+          {/* Body — elongated ellipsoid along direction of movement (+Z) */}
+          <mesh scale={[0.055, 0.038, 0.12]}>
+            <sphereGeometry args={[1, 8, 5]} />
+            <meshStandardMaterial color="#a0e0d8" emissive="#00c8b4" emissiveIntensity={0.2} />
+          </mesh>
+          {/* Tail fin — triangular cone, apex blends into body, base fans out at rear (-Z) */}
+          <mesh position={[0, 0, -0.16]} rotation={[Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.08, 0.10, 3]} />
+            <meshStandardMaterial color="#a0e0d8" emissive="#00c8b4" emissiveIntensity={0.2} />
+          </mesh>
+        </group>
       ))}
     </group>
   )
@@ -187,36 +191,36 @@ function Whale({ elapsed }: { elapsed: React.MutableRefObject<number> }) {
     const t = elapsed.current
     if (!groupRef.current) return
     groupRef.current.position.x = 5   + Math.sin(t * 0.07) * 1.8
-    groupRef.current.position.y = -38 + Math.sin(t * 0.05) * 1.2
+    groupRef.current.position.y = -50 + Math.sin(t * 0.05) * 1.2
     groupRef.current.rotation.z = Math.sin(t * 0.06) * 0.07
   })
 
   return (
-    <group ref={groupRef} position={[5, -38, -17]} rotation={[0, 0.55, 0]}>
+    <group ref={groupRef} position={[5, -50, -14]} rotation={[0, 0.55, 0]}>
       {/* Main body */}
-      <mesh scale={[1.6, 1.1, 4.8]}>
+      <mesh scale={[1.9, 1.3, 5.65]}>
         <sphereGeometry args={[2.5, 22, 14]} />
-        <meshBasicMaterial color="#0a1832" depthWrite={false} />
+        <meshBasicMaterial color="#0f2545" depthWrite={false} />
       </mesh>
       {/* Tail peduncle */}
-      <mesh position={[0, 0, -10]} scale={[0.65, 0.5, 2.2]}>
+      <mesh position={[0, 0, -10]} scale={[0.77, 0.59, 2.6]}>
         <sphereGeometry args={[2.5, 14, 10]} />
-        <meshBasicMaterial color="#0a1832" depthWrite={false} />
+        <meshBasicMaterial color="#0f2545" depthWrite={false} />
       </mesh>
       {/* Tail fluke */}
-      <mesh position={[0, 0, -14]} rotation={[0, 0.2, 0]} scale={[3.4, 0.12, 1.1]}>
+      <mesh position={[0, 0, -14]} rotation={[0, 0.2, 0]} scale={[4.0, 0.14, 1.3]}>
         <sphereGeometry args={[2.0, 10, 6]} />
-        <meshBasicMaterial color="#0a1832" depthWrite={false} />
+        <meshBasicMaterial color="#0f2545" depthWrite={false} />
       </mesh>
       {/* Dorsal fin */}
-      <mesh position={[0, 3.4, 1.5]} rotation={[0.35, 0, 0]} scale={[0.14, 1.4, 1.0]}>
+      <mesh position={[0, 3.4, 1.5]} rotation={[0.35, 0, 0]} scale={[0.165, 1.65, 1.18]}>
         <sphereGeometry args={[1.5, 8, 6]} />
-        <meshBasicMaterial color="#0a1832" depthWrite={false} />
+        <meshBasicMaterial color="#0f2545" depthWrite={false} />
       </mesh>
       {/* Pectoral fin (left) */}
-      <mesh position={[-3.2, -0.8, 3]} rotation={[0.2, 0, 0.4]} scale={[1.6, 0.1, 0.9]}>
+      <mesh position={[-3.2, -0.8, 3]} rotation={[0.2, 0, 0.4]} scale={[1.89, 0.12, 1.06]}>
         <sphereGeometry args={[1.5, 8, 6]} />
-        <meshBasicMaterial color="#0a1832" depthWrite={false} />
+        <meshBasicMaterial color="#0f2545" depthWrite={false} />
       </mesh>
     </group>
   )
