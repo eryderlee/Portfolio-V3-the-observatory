@@ -6,9 +6,9 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { BioluminescentParticles } from './BioluminescentParticles'
 import { Bubbles }                              from './Bubbles'
+import { Creatures }                            from './Creatures'
 import { WorkflowOrganism }                     from './WorkflowOrganism'
 import { WORKFLOW_GRAPHS, WORKFLOW_PLACEMENTS } from './workflowData'
-import { Creatures }                            from './Creatures'
 
 // ---------------------------------------------------------------------------
 // Camera path — dives from surface and visits each workflow organism.
@@ -344,7 +344,7 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
         depthFadeStart={0.8}
       />
 
-      {/* ── Deep sea creatures — jellyfish, fish schools, leviathan */}
+      {/* ── Deep sea creatures — jellyfish, fish schools, whale */}
       <Creatures progressRef={progressRef} />
 
       {/* ── Workflow organisms — n8n graphs rendered as bioluminescent networks */}
