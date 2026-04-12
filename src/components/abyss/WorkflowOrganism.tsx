@@ -2,6 +2,7 @@
 
 import { useRef, useMemo, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import type { WorkflowGraph } from './parseN8nWorkflow'
 
@@ -171,6 +172,42 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
         distance={scale * 5.5}
         decay={2}
       />
+
+      {/* ── Name label — floats above the organism centre ──────────────────── */}
+      <Html
+        center
+        position={[0, (scale ?? 1) * 0.6, 0]}
+        style={{ pointerEvents: 'none', userSelect: 'none' }}
+      >
+        <div style={{
+          background: 'rgba(0, 8, 18, 0.80)',
+          border: '1px solid rgba(0, 200, 180, 0.28)',
+          borderRadius: '3px',
+          padding: '4px 9px',
+          lineHeight: 1.35,
+          whiteSpace: 'nowrap',
+          textAlign: 'center',
+        }}>
+          <div style={{
+            color: '#00c8b4',
+            fontSize: '10px',
+            fontFamily: 'var(--font-sofia-condensed)',
+            fontWeight: 700,
+            letterSpacing: '0.09em',
+            textTransform: 'uppercase',
+          }}>
+            {graph.name}
+          </div>
+          <div style={{
+            color: 'rgba(0, 200, 180, 0.50)',
+            fontSize: '8px',
+            fontFamily: 'var(--font-sofia-condensed)',
+            letterSpacing: '0.06em',
+          }}>
+            {graph.nodes.length} nodes
+          </div>
+        </div>
+      </Html>
     </group>
   )
 }

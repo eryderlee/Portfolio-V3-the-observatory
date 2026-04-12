@@ -10,10 +10,15 @@ import { WorkflowOrganism }                     from './WorkflowOrganism'
 import { WORKFLOW_GRAPHS, WORKFLOW_PLACEMENTS } from './workflowData'
 
 // ---------------------------------------------------------------------------
-// Camera path — descends from surface through 3 depth tiers
-// Tier 1 (Twilight):  Y =  0 → -20
-// Tier 2 (Midnight):  Y = -22 → -44
-// Tier 3 (Abyss):     Y = -46 → -68
+// Camera path — dives from surface and visits each workflow organism.
+//
+// For each organism the path has two keyframes:
+//   approach  — camera swings to the organism's X side at the midpoint Y
+//   close-up  — camera settles directly in front of the organism
+//               (same X/Y as organism, Z = organism.z + max(6, scale*1.8))
+//
+// This mirrors the Celestial Realm pattern where the camera visits each
+// island before moving on.
 // ---------------------------------------------------------------------------
 function buildAbyssPath(): {
   curve: THREE.CatmullRomCurve3
@@ -28,28 +33,46 @@ function buildAbyssPath(): {
     quats.push(new THREE.Quaternion().setFromRotationMatrix(m))
   }
 
-  // Surface — camera just below the surface, looking slightly UP toward the light above,
-  // then tilting downward as the descent begins
-  push(new THREE.Vector3(  0,  2,  10), new THREE.Vector3( 0,   7,   5))
-  push(new THREE.Vector3(  0,  0,   6), new THREE.Vector3( 0,  -4,  -2))
+  // Pre-compute close-up cam + target for each organism.
+  // Camera sits in front of the organism (positive Z offset from it),
+  // looking directly at the organism centre.
+  const closeUps = WORKFLOW_PLACEMENTS.map(({ position: p, scale }) => ({
+    cam:    new THREE.Vector3(p[0], p[1], p[2] + Math.max(6, scale * 1.8)),
+    target: new THREE.Vector3(p[0], p[1], p[2]),
+  }))
 
-  // ── Tier 1: Twilight Zone ─────────────────────────────────────────────────
-  push(new THREE.Vector3( -3,  -4,   3), new THREE.Vector3(-2, -10,  -4))
-  push(new THREE.Vector3( -2, -10,  -4), new THREE.Vector3( 3, -17,  -8))
-  push(new THREE.Vector3(  3, -17,  -8), new THREE.Vector3( 0, -22, -12))
+  // ── Surface entry ─────────────────────────────────────────────────────────
+  push(new THREE.Vector3(0,  2, 10), new THREE.Vector3(0, -6,  -2))
+  push(new THREE.Vector3(0,  0,  6), new THREE.Vector3(0, -8,  -2))
 
-  // ── Tier 2: Midnight Zone ─────────────────────────────────────────────────
-  push(new THREE.Vector3(  4, -25,  -6), new THREE.Vector3(-3, -32, -10))
-  push(new THREE.Vector3( -3, -32, -10), new THREE.Vector3( 4, -40, -16))
-  push(new THREE.Vector3(  4, -40, -16), new THREE.Vector3( 0, -46, -20))
+  // ── Dive straight to first organism ───────────────────────────────────────
+  push(closeUps[0].cam, closeUps[0].target)
 
-  // ── Tier 3: The Abyss ─────────────────────────────────────────────────────
-  push(new THREE.Vector3( -4, -50,  -9), new THREE.Vector3( 3, -58, -14))
-  push(new THREE.Vector3(  3, -58, -14), new THREE.Vector3( 0, -65, -19))
-  push(new THREE.Vector3(  0, -65, -19), new THREE.Vector3( 0, -72, -24))
+  // ── Approach + close-up for each subsequent organism ──────────────────────
+  for (let i = 1; i < closeUps.length; i++) {
+    const cu     = closeUps[i]
+    const prevCu = closeUps[i - 1]
+    const ox     = WORKFLOW_PLACEMENTS[i].position[0]
 
-  // Final rest — deepest point
-  push(new THREE.Vector3(  0, -73, -16), new THREE.Vector3( 0, -80, -20))
+    // Swing toward the organism's X side at the midpoint depth
+    push(
+      new THREE.Vector3(
+        ox >= 0 ? 3 : -3,
+        (prevCu.cam.y + cu.cam.y) / 2,
+        (prevCu.cam.z + cu.cam.z) / 2,
+      ),
+      cu.target,
+    )
+
+    push(cu.cam, cu.target)
+  }
+
+  // ── Final descent into the void ───────────────────────────────────────────
+  const last = WORKFLOW_PLACEMENTS[WORKFLOW_PLACEMENTS.length - 1]
+  push(
+    new THREE.Vector3(0, last.position[1] - 5, last.position[2] + 2),
+    new THREE.Vector3(0, last.position[1] - 15, last.position[2] - 5),
+  )
 
   return {
     curve: new THREE.CatmullRomCurve3(points),
