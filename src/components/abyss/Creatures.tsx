@@ -43,11 +43,11 @@ function JellyfishLayer() {
       const pulse = 1 - 0.22 * Math.max(0, Math.sin(t * 5.0 * sp + ph))
 
       // Bell dome: half-sphere opens downward (thetaStart=0 = upper hemisphere,
-      // dome at +Y). Scale Y by 1.5× so it reads as an upright dome rather than
-      // a flat disc when the camera passes at an angle.
+      // dome at +Y). Slight Y boost so it reads as an upright dome without
+      // looking like an oversized balloon.
       dummy.position.set(wx, wy, wz)
       dummy.rotation.set(0, 0, 0)
-      dummy.scale.set(r, pulse * r * 1.5, r)
+      dummy.scale.set(r, pulse * r * 1.1, r)
       dummy.updateMatrix()
       bell.setMatrixAt(i, dummy.matrix)
 
@@ -142,6 +142,31 @@ function FishSchool({
   )
 
   const groupRefs = useRef<(THREE.Group | null)[]>(Array(def.count).fill(null))
+  const tailRefs  = useRef<(THREE.Group | null)[]>(Array(def.count).fill(null))
+
+  // Fish geometries — created once per component instance
+  const { bodyGeo, tailGeo } = useMemo(() => {
+    // Body: unit sphere, scaled in JSX to torpedo shape (nose at +Z, tail at -Z)
+    const bodyGeo = new THREE.SphereGeometry(1, 10, 6)
+
+    // Forked V-tail: two triangular lobes spreading up/down from peduncle
+    const tailGeo = new THREE.BufferGeometry()
+    const tv = new Float32Array([
+      // Top lobe
+       0.00,  0.003,  0.00,
+       0.042,  0.042, -0.065,
+      -0.042,  0.042, -0.065,
+      // Bottom lobe
+       0.00, -0.003,  0.00,
+      -0.042, -0.042, -0.065,
+       0.042, -0.042, -0.065,
+    ])
+    tailGeo.setAttribute('position', new THREE.BufferAttribute(tv, 3))
+    tailGeo.setIndex([0, 1, 2,  3, 4, 5])
+    tailGeo.computeVertexNormals()
+
+    return { bodyGeo, tailGeo }
+  }, [])
 
   useFrame(() => {
     const t = elapsed.current
@@ -155,10 +180,16 @@ function FishSchool({
       const y = def.center[1] + fish.yOffset + Math.sin(t * 0.8 + fish.bobPhase) * 0.3
       const z = def.center[2] + Math.sin(fish.angle) * r * 0.55 + fish.zOffset
 
-      const group = groupRefs.current[i]
-      if (group) {
-        group.position.set(x, y, z)
-        group.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
+      const grp = groupRefs.current[i]
+      if (grp) {
+        grp.position.set(x, y, z)
+        grp.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
+      }
+
+      // Subtle tail wiggle side-to-side
+      const tail = tailRefs.current[i]
+      if (tail) {
+        tail.rotation.y = Math.sin(t * 5.0 * def.baseSpeed * fish.speed + fish.bobPhase) * 0.28
       }
     }
   })
@@ -167,16 +198,16 @@ function FishSchool({
     <group>
       {Array.from({ length: def.count }, (_, i) => (
         <group key={i} ref={(el) => { groupRefs.current[i] = el }}>
-          {/* Body — elongated ellipsoid along direction of movement (+Z) */}
-          <mesh scale={[0.055, 0.038, 0.12]}>
-            <sphereGeometry args={[1, 8, 5]} />
-            <meshStandardMaterial color="#a0e0d8" emissive="#00c8b4" emissiveIntensity={0.2} />
+          {/* Body: torpedo ellipsoid — nose at +Z, tail at -Z, same footprint as old cone */}
+          <mesh geometry={bodyGeo} scale={[0.05, 0.03, 0.11]}>
+            <meshBasicMaterial color="#a0e0d8" />
           </mesh>
-          {/* Tail fin — triangular cone, apex blends into body, base fans out at rear (-Z) */}
-          <mesh position={[0, 0, -0.16]} rotation={[Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[0.08, 0.10, 3]} />
-            <meshStandardMaterial color="#a0e0d8" emissive="#00c8b4" emissiveIntensity={0.2} />
-          </mesh>
+          {/* Tail fork — at body rear, wiggles side-to-side */}
+          <group ref={(el) => { tailRefs.current[i] = el }} position={[0, 0, -0.11]}>
+            <mesh geometry={tailGeo}>
+              <meshBasicMaterial color="#78c8e0" transparent opacity={0.9} side={THREE.DoubleSide} />
+            </mesh>
+          </group>
         </group>
       ))}
     </group>
