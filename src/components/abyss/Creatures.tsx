@@ -1,26 +1,24 @@
 'use client'
 
 import { useRef, useMemo } from 'react'
-import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { useFrame }        from '@react-three/fiber'
+import * as THREE          from 'three'
 
 // ============================================================================
-// Jellyfish
+// Jellyfish — instanced rendering with size variety and idle/active differences
 // ============================================================================
 
-const JF_DATA: { x: number; y: number; z: number; ph: number }[] = [
-  { x: -4, y: -3,  z: -3, ph: 0.0 },
-  { x:  5, y: -7,  z: -5, ph: 1.3 },
-  { x: -7, y: -11, z: -4, ph: 2.6 },
-  { x:  3, y: -14, z: -7, ph: 0.8 },
-  { x: -2, y: -18, z: -6, ph: 4.1 },
+const JF_DATA = [
+  { x:  4, y:  -6, z: -3, ph: 0.0, radius: 0.5, speedMult: 1.0, driftPhase: 0.7, driftAmp: 0.8 },
+  { x: -5, y:  -9, z: -5, ph: 1.2, radius: 0.3, speedMult: 0.2, driftPhase: 1.5, driftAmp: 0.2 }, // idle
+  { x:  3, y: -12, z: -4, ph: 2.4, radius: 0.9, speedMult: 0.7, driftPhase: 0.3, driftAmp: 0.6 },
+  { x: -3, y: -18, z: -7, ph: 0.8, radius: 1.2, speedMult: 0.2, driftPhase: 2.1, driftAmp: 0.2 }, // idle
+  { x:  7, y: -14, z: -6, ph: 3.6, radius: 0.6, speedMult: 0.6, driftPhase: 0.9, driftAmp: 0.5 },
 ]
 
-const BELL_R = 0.7
-const T_N    = 6   // tentacles per jellyfish
-const B_N    = 5   // beads per tentacle
-const JF_N   = JF_DATA.length           // 5
-const BEAD_N = JF_N * T_N * B_N         // 150
+const JF_N = JF_DATA.length
+const T_N  = 6   // tentacles per jellyfish
+const B_N  = 5   // beads per tentacle
 
 function JellyfishLayer() {
   const bellRef = useRef<THREE.InstancedMesh>(null)
@@ -34,32 +32,32 @@ function JellyfishLayer() {
     if (!bell || !bead) return
 
     for (let i = 0; i < JF_N; i++) {
-      const { x: ox, y: oy, z: oz, ph } = JF_DATA[i]
+      const { x: ox, y: oy, z: oz, ph, radius: r, speedMult: sp, driftPhase: dp, driftAmp: da } = JF_DATA[i]
 
-      // Slow horizontal drift
-      const wx = ox + Math.sin(t * 0.20 + ph) * 1.4
-      const wy = oy + Math.sin(t * 0.14 + ph * 0.8) * 0.35
-      const wz = oz + Math.cos(t * 0.17 + ph * 1.1) * 1.1
+      // Slow horizontal drift — idle jellyfish drift very little
+      const wx = ox + Math.sin(t * 0.20 * sp + dp) * 1.4 * da
+      const wy = oy + Math.sin(t * 0.14 * sp + ph * 0.8) * 0.35
+      const wz = oz + Math.cos(t * 0.17 * sp + ph * 1.1) * 1.1 * da * 0.5
 
-      // Asymmetric pump — quick squeeze, slow open
-      const pulse = 1 - 0.22 * Math.max(0, Math.sin(t * 5.0 + ph))
+      // Asymmetric pump — active jellyfish pulse faster
+      const pulse = 1 - 0.22 * Math.max(0, Math.sin(t * 5.0 * sp + ph))
 
       dummy.position.set(wx, wy, wz)
       dummy.rotation.set(0, 0, 0)
-      dummy.scale.set(1, pulse, 1)
+      dummy.scale.set(r, pulse * r, r)
       dummy.updateMatrix()
       bell.setMatrixAt(i, dummy.matrix)
 
-      // Tentacle beads — sine-wave sway increases with drop distance
+      // Tentacle beads — offset from bell rim, sway with current
       for (let j = 0; j < T_N; j++) {
         const ang = (j / T_N) * Math.PI * 2
-        const tx  = wx + Math.cos(ang) * (BELL_R * 0.8)
-        const tz  = wz + Math.sin(ang) * (BELL_R * 0.8)
+        const tx  = wx + Math.cos(ang) * (r * 0.8)
+        const tz  = wz + Math.sin(ang) * (r * 0.8)
         for (let k = 0; k < B_N; k++) {
-          const drop = 0.28 + k * 0.32
+          const drop = r * 0.4 + k * r * 0.46
           const sway = Math.min(k * 0.10, 0.45)
-          const px   = tx + Math.sin(t * 1.4 + ph + j * 0.9 + k * 0.4) * sway
-          const pz   = tz + Math.cos(t * 1.2 + ph * 0.9 + j * 1.1)     * sway
+          const px   = tx + Math.sin(t * 1.4 * sp + ph + j * 0.9 + k * 0.4) * sway
+          const pz   = tz + Math.cos(t * 1.2 * sp + ph * 0.9 + j * 1.1)     * sway
           dummy.position.set(px, wy - drop, pz)
           dummy.scale.set(1, 1, 1)
           dummy.updateMatrix()
@@ -76,7 +74,7 @@ function JellyfishLayer() {
     <>
       {/* Bell domes — translucent teal, additive blending */}
       <instancedMesh ref={bellRef} args={[undefined, undefined, JF_N]} frustumCulled={false}>
-        <sphereGeometry args={[BELL_R, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <sphereGeometry args={[1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshBasicMaterial
           color="#00c8b4"
           transparent
@@ -88,7 +86,7 @@ function JellyfishLayer() {
       </instancedMesh>
 
       {/* Tentacle beads */}
-      <instancedMesh ref={beadRef} args={[undefined, undefined, BEAD_N]} frustumCulled={false}>
+      <instancedMesh ref={beadRef} args={[undefined, undefined, JF_N * T_N * B_N]} frustumCulled={false}>
         <sphereGeometry args={[0.05, 5, 3]} />
         <meshBasicMaterial
           color="#00c8b4"
@@ -103,7 +101,7 @@ function JellyfishLayer() {
 }
 
 // ============================================================================
-// Fish Schools
+// Fish Schools — lazy orbital drift, no dispersal
 // ============================================================================
 
 interface SchoolDef {
@@ -114,12 +112,13 @@ interface SchoolDef {
 }
 
 // 5 schools spanning twilight → midnight → abyss zones
+// baseSpeed is ~35% of prior values for lazy drift
 const SCHOOL_DEFS: SchoolDef[] = [
-  { center: [ -4,  -7,  -4], count: 18, orbitRadius: 3.5, baseSpeed: 0.9 },
-  { center: [  6, -16,  -7], count: 22, orbitRadius: 4.0, baseSpeed: 0.7 },
-  { center: [ -8, -25, -10], count: 16, orbitRadius: 3.2, baseSpeed: 1.1 },
-  { center: [  5, -36, -13], count: 20, orbitRadius: 4.5, baseSpeed: 0.8 },
-  { center: [ -5, -46, -14], count: 24, orbitRadius: 3.8, baseSpeed: 0.6 },
+  { center: [ -4,  -7,  -4], count: 18, orbitRadius: 3.5, baseSpeed: 0.32 },
+  { center: [  6, -16,  -7], count: 22, orbitRadius: 4.0, baseSpeed: 0.25 },
+  { center: [ -8, -25, -10], count: 16, orbitRadius: 3.2, baseSpeed: 0.39 },
+  { center: [  5, -36, -13], count: 20, orbitRadius: 4.5, baseSpeed: 0.28 },
+  { center: [ -5, -46, -14], count: 24, orbitRadius: 3.8, baseSpeed: 0.21 },
 ]
 
 function FishSchool({
@@ -147,7 +146,7 @@ function FishSchool({
 
     for (let i = 0; i < def.count; i++) {
       const fish = fishState.current[i]
-      fish.angle += 0.016 * 0.3 * fish.speed * def.baseSpeed
+      fish.angle += 0.016 * fish.speed * def.baseSpeed
 
       const x = def.center[0] + Math.cos(fish.angle) * r
       const y = def.center[1] + fish.yOffset + Math.sin(t * 0.8 + fish.bobPhase) * 0.3
@@ -156,7 +155,6 @@ function FishSchool({
       const mesh = meshRefs.current[i]
       if (mesh) {
         mesh.position.set(x, y, z)
-        // Orient fish along orbital direction
         mesh.rotation.y = Math.atan2(-Math.sin(fish.angle), Math.cos(fish.angle) * 0.55)
       }
     }
@@ -179,7 +177,7 @@ function FishSchool({
 }
 
 // ============================================================================
-// Whale
+// Whale — dark navy silhouette, no bioluminescence
 // ============================================================================
 
 function Whale({ elapsed }: { elapsed: React.MutableRefObject<number> }) {
@@ -190,53 +188,35 @@ function Whale({ elapsed }: { elapsed: React.MutableRefObject<number> }) {
     if (!groupRef.current) return
     groupRef.current.position.x = 5   + Math.sin(t * 0.07) * 1.8
     groupRef.current.position.y = -38 + Math.sin(t * 0.05) * 1.2
-    // Slow gentle roll
     groupRef.current.rotation.z = Math.sin(t * 0.06) * 0.07
   })
 
   return (
-    // Angled so the whale swims diagonally past the camera (not nose-on)
     <group ref={groupRef} position={[5, -38, -17]} rotation={[0, 0.55, 0]}>
-      {/* Main body — large dark blue elongated shape */}
+      {/* Main body */}
       <mesh scale={[1.6, 1.1, 4.8]}>
         <sphereGeometry args={[2.5, 22, 14]} />
-        <meshStandardMaterial
-          color="#0a1a3a"
-          roughness={0.95}
-          metalness={0.05}
-        />
+        <meshBasicMaterial color="#0a1832" depthWrite={false} />
       </mesh>
-      {/* Tail peduncle — narrows toward the tail */}
+      {/* Tail peduncle */}
       <mesh position={[0, 0, -10]} scale={[0.65, 0.5, 2.2]}>
         <sphereGeometry args={[2.5, 14, 10]} />
-        <meshStandardMaterial
-          color="#0a1a3a"
-          roughness={0.95}
-        />
+        <meshBasicMaterial color="#0a1832" depthWrite={false} />
       </mesh>
-      {/* Tail fluke — flat horizontal fan */}
+      {/* Tail fluke */}
       <mesh position={[0, 0, -14]} rotation={[0, 0.2, 0]} scale={[3.4, 0.12, 1.1]}>
         <sphereGeometry args={[2.0, 10, 6]} />
-        <meshStandardMaterial
-          color="#0a1a3a"
-          roughness={0.95}
-        />
+        <meshBasicMaterial color="#0a1832" depthWrite={false} />
       </mesh>
       {/* Dorsal fin */}
       <mesh position={[0, 3.4, 1.5]} rotation={[0.35, 0, 0]} scale={[0.14, 1.4, 1.0]}>
         <sphereGeometry args={[1.5, 8, 6]} />
-        <meshStandardMaterial
-          color="#0a1a3a"
-          roughness={0.95}
-        />
+        <meshBasicMaterial color="#0a1832" depthWrite={false} />
       </mesh>
       {/* Pectoral fin (left) */}
       <mesh position={[-3.2, -0.8, 3]} rotation={[0.2, 0, 0.4]} scale={[1.6, 0.1, 0.9]}>
         <sphereGeometry args={[1.5, 8, 6]} />
-        <meshStandardMaterial
-          color="#0a1a3a"
-          roughness={0.95}
-        />
+        <meshBasicMaterial color="#0a1832" depthWrite={false} />
       </mesh>
     </group>
   )
