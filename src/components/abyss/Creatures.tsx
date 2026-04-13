@@ -9,11 +9,11 @@ import * as THREE          from 'three'
 // ============================================================================
 
 const JF_DATA = [
-  { x:  4, y:  -6, z: -3, ph: 0.0, radius: 0.5, speedMult: 1.0,  driftPhase: 0.7, driftAmp: 0.8  },
-  { x: -5, y:  -9, z: -5, ph: 1.2, radius: 0.3, speedMult: 0.12, driftPhase: 1.5, driftAmp: 0.08 }, // idle
-  { x:  3, y: -12, z: -4, ph: 2.4, radius: 0.9, speedMult: 0.7,  driftPhase: 0.3, driftAmp: 0.6  },
-  { x: -3, y: -18, z: -7, ph: 0.8, radius: 1.2, speedMult: 0.12, driftPhase: 2.1, driftAmp: 0.08 }, // idle
-  { x:  7, y: -14, z: -6, ph: 3.6, radius: 0.6, speedMult: 0.13, driftPhase: 0.9, driftAmp: 0.08 }, // idle
+  { x:  4, y:  -6, z: -3, ph: 0.0, radius: 0.5, speedMult: 0.12, driftPhase: 0.7, driftAmp: 0.08 }, // idle  (shallowest)
+  { x: -5, y:  -9, z: -5, ph: 1.2, radius: 0.3, speedMult: 0.8,  driftPhase: 1.5, driftAmp: 0.6  }, // moving
+  { x:  3, y: -12, z: -4, ph: 2.4, radius: 0.9, speedMult: 0.12, driftPhase: 0.3, driftAmp: 0.08 }, // idle
+  { x:  7, y: -14, z: -6, ph: 3.6, radius: 0.6, speedMult: 0.7,  driftPhase: 0.9, driftAmp: 0.6  }, // moving
+  { x: -3, y: -18, z: -7, ph: 0.8, radius: 1.2, speedMult: 0.12, driftPhase: 2.1, driftAmp: 0.08 }, // idle  (deepest)
 ]
 
 const JF_N = JF_DATA.length
@@ -47,7 +47,7 @@ function JellyfishLayer() {
       // looking like an oversized balloon.
       dummy.position.set(wx, wy, wz)
       dummy.rotation.set(0, 0, 0)
-      dummy.scale.set(r, pulse * r * 1.1, r)
+      dummy.scale.set(r, pulse * r * 0.8, r)
       dummy.updateMatrix()
       bell.setMatrixAt(i, dummy.matrix)
 
