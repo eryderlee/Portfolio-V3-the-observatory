@@ -15,6 +15,8 @@ interface WorkflowOrganismProps {
   position: [number, number, number]
   /** Multiplier applied to node positions — controls organism footprint */
   scale?:   number
+  /** Override the default teal palette with a city colour */
+  color?:   string
 }
 
 // ---------------------------------------------------------------------------
@@ -27,7 +29,7 @@ interface WorkflowOrganismProps {
 //   • PointLight                     — warm ambient glow at the organism centre
 // ---------------------------------------------------------------------------
 
-export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrganismProps) {
+export function WorkflowOrganism({ graph, position, scale = 1.0, color = '#00c8b4' }: WorkflowOrganismProps) {
   const nodesMeshRef   = useRef<THREE.InstancedMesh>(null)
   const packetsMeshRef = useRef<THREE.InstancedMesh>(null)
 
@@ -121,7 +123,7 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
   return (
     <group position={position}>
 
-      {/* ── Node spheres — teal, additive ──────────────────────────────────── */}
+      {/* ── Node spheres — city colour, additive ───────────────────────────── */}
       <instancedMesh
         ref={nodesMeshRef}
         args={[undefined, undefined, graph.nodes.length]}
@@ -129,7 +131,7 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
       >
         <sphereGeometry args={[0.13, 8, 6]} />
         <meshBasicMaterial
-          color="#00c8b4"
+          color={color}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           transparent
@@ -137,19 +139,19 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
         />
       </instancedMesh>
 
-      {/* ── Connection lines — dim teal, additive ──────────────────────────── */}
+      {/* ── Connection lines — city colour, additive ────────────────────────── */}
       <lineSegments frustumCulled>
         <primitive object={edgeGeo} attach="geometry" />
         <lineBasicMaterial
-          color="#007a6a"
+          color={color}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           transparent
-          opacity={0.4}
+          opacity={0.35}
         />
       </lineSegments>
 
-      {/* ── Data-flow packets — bright cyan, additive ──────────────────────── */}
+      {/* ── Data-flow packets — city colour, bright, additive ──────────────── */}
       <instancedMesh
         ref={packetsMeshRef}
         args={[undefined, undefined, packetCount]}
@@ -157,7 +159,7 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
       >
         <sphereGeometry args={[0.06, 6, 4]} />
         <meshBasicMaterial
-          color="#55ffee"
+          color={color}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           transparent
@@ -167,7 +169,7 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
 
       {/* ── Bioluminescent core glow ────────────────────────────────────────── */}
       <pointLight
-        color="#00d0c0"
+        color={color}
         intensity={scale * 0.65}
         distance={scale * 5.5}
         decay={2}
@@ -181,7 +183,7 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
       >
         <div style={{
           background: 'rgba(0, 8, 18, 0.80)',
-          border: '1px solid rgba(0, 200, 180, 0.28)',
+          border: `1px solid ${color}47`,
           borderRadius: '3px',
           padding: '4px 9px',
           lineHeight: 1.35,
@@ -189,7 +191,7 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
           textAlign: 'center',
         }}>
           <div style={{
-            color: '#00c8b4',
+            color,
             fontSize: '10px',
             fontFamily: 'var(--font-sofia-condensed)',
             fontWeight: 700,
@@ -199,7 +201,7 @@ export function WorkflowOrganism({ graph, position, scale = 1.0 }: WorkflowOrgan
             {graph.name}
           </div>
           <div style={{
-            color: 'rgba(0, 200, 180, 0.50)',
+            color: `${color}80`,
             fontSize: '8px',
             fontFamily: 'var(--font-sofia-condensed)',
             letterSpacing: '0.06em',

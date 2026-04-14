@@ -7,19 +7,18 @@ import * as THREE from 'three'
 import { BioluminescentParticles } from './BioluminescentParticles'
 import { Bubbles }                              from './Bubbles'
 import { Creatures }                            from './Creatures'
-import { WorkflowOrganism }                     from './WorkflowOrganism'
-import { WORKFLOW_GRAPHS, WORKFLOW_PLACEMENTS } from './workflowData'
+import { AbyssalCity }    from './AbyssalCity'
+import { CITY_DEFINITIONS } from './workflowData'
 
 // ---------------------------------------------------------------------------
-// Camera path — dives from surface and visits each workflow organism.
+// Camera path — dives from the surface and visits each Abyssal City.
 //
-// For each organism the path has two keyframes:
-//   approach  — camera swings to the organism's X side at the midpoint Y
-//   close-up  — camera settles directly in front of the organism
-//               (same X/Y as organism, Z = organism.z + max(6, scale*1.8))
+// For each city the path has two keyframes:
+//   approach — camera swings in from the side to frame the full city spread
+//   close-up — camera settles directly in front, looking at the city centre
 //
-// This mirrors the Celestial Realm pattern where the camera visits each
-// island before moving on.
+// Camera is always kept at positive Z relative to the city centre so it
+// looks "forward" (toward −Z) into the illuminated city.
 // ---------------------------------------------------------------------------
 function buildAbyssPath(): {
   curve: THREE.CatmullRomCurve3
@@ -34,45 +33,43 @@ function buildAbyssPath(): {
     quats.push(new THREE.Quaternion().setFromRotationMatrix(m))
   }
 
-  // Pre-compute close-up cam + target for each organism.
-  // Camera sits in front of the organism (positive Z offset from it),
-  // looking directly at the organism centre.
-  const closeUps = WORKFLOW_PLACEMENTS.map(({ position: p, scale }) => ({
-    cam:    new THREE.Vector3(p[0], p[1], p[2] + Math.max(6, scale * 1.8)),
-    target: new THREE.Vector3(p[0], p[1], p[2]),
-  }))
-
   // ── Surface entry ─────────────────────────────────────────────────────────
-  push(new THREE.Vector3(0,  2, 10), new THREE.Vector3(0, -6,  -2))
-  push(new THREE.Vector3(0,  0,  6), new THREE.Vector3(0, -8,  -2))
+  push(new THREE.Vector3(0,  2, 10), new THREE.Vector3(0, -8,  -2))
+  push(new THREE.Vector3(0,  0,  6), new THREE.Vector3(0, -10, -4))
 
-  // ── Dive straight to first organism ───────────────────────────────────────
-  push(closeUps[0].cam, closeUps[0].target)
+  // ── Visit each city ───────────────────────────────────────────────────────
+  // For each city: approach from the side at city-level height, then
+  // settle into a frontal close-up that frames the whole city radius.
+  for (let i = 0; i < CITY_DEFINITIONS.length; i++) {
+    const { center: c, radius: r } = CITY_DEFINITIONS[i]
+    const [cx, cy, cz] = c
 
-  // ── Approach + close-up for each subsequent organism ──────────────────────
-  for (let i = 1; i < closeUps.length; i++) {
-    const cu     = closeUps[i]
-    const prevCu = closeUps[i - 1]
-    const ox     = WORKFLOW_PLACEMENTS[i].position[0]
+    // Alternate left/right approach for visual variety
+    const side = i % 2 === 0 ? 1 : -1
 
-    // Swing toward the organism's X side at the midpoint depth
+    // Approach — camera above-and-to-side, still looking at city centre
     push(
       new THREE.Vector3(
-        ox >= 0 ? 3 : -3,
-        (prevCu.cam.y + cu.cam.y) / 2,
-        (prevCu.cam.z + cu.cam.z) / 2,
+        side * r * 0.7,
+        cy + 5,
+        cz + r * 1.1,
       ),
-      cu.target,
+      new THREE.Vector3(cx, cy, cz),
     )
 
-    push(cu.cam, cu.target)
+    // Close-up — frontal, framing the full city spread
+    push(
+      new THREE.Vector3(cx, cy + 2, cz + r * 0.8 + 8),
+      new THREE.Vector3(cx, cy,     cz),
+    )
   }
 
   // ── Final descent into the void ───────────────────────────────────────────
-  const last = WORKFLOW_PLACEMENTS[WORKFLOW_PLACEMENTS.length - 1]
+  const last = CITY_DEFINITIONS[CITY_DEFINITIONS.length - 1]
+  const [lx, ly, lz] = last.center
   push(
-    new THREE.Vector3(0, last.position[1] - 5, last.position[2] + 2),
-    new THREE.Vector3(0, last.position[1] - 15, last.position[2] - 5),
+    new THREE.Vector3(lx,  ly - 8,  lz + 4),
+    new THREE.Vector3(lx, ly - 24,  lz - 8),
   )
 
   return {
@@ -347,14 +344,9 @@ function AbyssSceneContent({ progressRef }: { progressRef: React.MutableRefObjec
       {/* ── Deep sea creatures — jellyfish, fish schools, whale */}
       <Creatures progressRef={progressRef} />
 
-      {/* ── Workflow organisms — n8n graphs rendered as bioluminescent networks */}
-      {WORKFLOW_GRAPHS.map((graph, i) => (
-        <WorkflowOrganism
-          key={graph.name}
-          graph={graph}
-          position={WORKFLOW_PLACEMENTS[i].position}
-          scale={WORKFLOW_PLACEMENTS[i].scale}
-        />
+      {/* ── Abyssal cities — clustered workflow organisms with city colour + tendrils */}
+      {CITY_DEFINITIONS.map(city => (
+        <AbyssalCity key={city.name} city={city} />
       ))}
 
       <EffectComposer>
